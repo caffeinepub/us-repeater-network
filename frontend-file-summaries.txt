@@ -1,0 +1,18 @@
+{
+  "frontend/src/services/repeaterBookApi.ts": "Service module that calls the RepeaterBook public API at https://www.repeaterbook.com/api/export.php, maps US state abbreviations to FIPS codes, and exports a fetchRepeaterBookData function that returns mapped repeater objects with a source field set to 'repeaterbook'. Handles CORS errors and network failures gracefully by returning an empty array.",
+  "frontend/src/hooks/useQueries.ts": "React Query hooks for all backend operations including user profiles, repeater CRUD, favorites management, admin functions, and zip code proximity search. Encapsulates all actor calls with proper invalidation.",
+  "frontend/src/App.tsx": "Main application component with TanStack Router setup, QueryClient provider, ThemeProvider, and Toaster. Defines all routes (home, directory, submit, admin, favorites, profile) with a shared RootLayout containing Header and Footer.",
+  "frontend/src/components/Header.tsx": "Sticky navigation header with the US Repeater Network logo/branding, desktop and mobile nav links, and login/logout button using Internet Identity.",
+  "frontend/src/components/Footer.tsx": "Application footer with brand info, quick links, data source credits (RepeaterBook.com), copyright year, and caffeine.ai attribution with UTM tracking.",
+  "frontend/src/components/RepeaterCard.tsx": "Repeater card component that handles both local Repeater backend types and MappedRepeaterBookRepeater types, displaying frequency, call sign, location, offset, CTCSS, mode, status indicator, and a source badge (RepeaterBook amber or Local teal).",
+  "frontend/src/components/FavoriteButton.tsx": "Favorite toggle button that supports a disabled prop with tooltip explanation, used to disable favoriting for RepeaterBook-sourced entries while keeping it functional for local repeaters.",
+  "frontend/src/components/RepeaterDetailModal.tsx": "Detail modal for both local and RepeaterBook repeaters, showing all available fields with N/A fallbacks for missing data, a RepeaterBook attribution link for external entries, and a disabled FavoriteButton for RepeaterBook entries.",
+  "frontend/src/pages/HomePage.tsx": "Landing page with hero section featuring the antenna logo, feature highlights grid, and a CTA for GMRS repeater submission.",
+  "frontend/src/pages/DirectoryPage.tsx": "Main directory page that fetches live data from RepeaterBook API when a state or city is selected, merges results with local backend repeaters, shows loading/error states including CORS warnings, and renders a filterable grid of RepeaterCard components.",
+  "frontend/src/pages/SubmitPage.tsx": "Form page for submitting new repeaters (primarily GMRS), with authentication gate, all required fields, and info banner explaining RepeaterBook covers ham radio automatically.",
+  "frontend/src/pages/AdminPage.tsx": "Admin panel with passphrase gate (WendellAdmin2024), displays pending repeater submissions with approve/reject/delete actions.",
+  "frontend/src/pages/FavoritesPage.tsx": "Favorites page showing the authenticated user's saved local repeaters with a login gate and link to the directory.",
+  "frontend/src/pages/ProfilePage.tsx": "User profile page for setting display name, call sign, and bio, with authentication gate.",
+  "frontend/src/index.css": "Global styles with OKLCH color system for the dark navy/charcoal ham radio theme, Orbitron display font for headings, Inter for body text, and custom utility classes.",
+  "frontend/tailwind.config.js": "Tailwind configuration with custom color tokens (amber, navy, teal), Orbitron/Inter font families, amber glow box shadows, and animation keyframes."
+}
