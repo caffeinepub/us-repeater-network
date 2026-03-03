@@ -2,10 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-create-a-frontend-service-utility-module-at-frontend-src-services-repeaterbookapi-ts-that-calls-the-repeaterbook-public-api-at-https-www-repeaterbook-com-api-export-php-the-module-must-support-querying-by-state-using-the-state-id-parameter-with-2-letter-state-abbreviation-by-city-using-the-city-parameter-and-optionally-by-frequency-it-must-parse-the-json-response-and-map-repeaterbook-fields-frequency-offset-uplink-tone-downlink-tone-tsq-call-sign-nearest-city-state-use-operational-status-etc-into-the-app-s-internal-repeater-shape-so-it-is-compatible-with-existing-repeatercard-and-repeaterdetailmodal-components-mark-these-entries-with-a-source-field-set-to-repeaterbook-to-distinguish-them-from-locally-submitted-repeaters",
-      "featureTitle": "Create a frontend service/utility module at frontend/src/services/repeaterBookApi.ts that calls the RepeaterBook public API at https://www.repeaterbook.com/api/export.php. The module must support querying by state (using the 'state_id' parameter with 2-letter state abbreviation), by city (using the 'city' parameter), and optionally by frequency. It must parse the JSON response and map RepeaterBook fields (Frequency, Offset, Uplink Tone, Downlink Tone, TSQ, Call Sign, Nearest City, State, Use, Operational Status, etc.) into the app's internal Repeater shape so it is compatible with existing RepeaterCard and RepeaterDetailModal components. Mark these entries with a source field set to 'repeaterbook' to distinguish them from locally submitted repeaters.",
+      "featureId": "feature-update-the-chirp-csv-parser-frontend-src-utils-csvparser-ts-to-correctly-map-all-chirp-csv-columns-including-location-name-frequency-duplex-offset-tone-rtonefreq-ctonefreq-dtcscode-mode-and-comment-into-the-backend-repeater-type-ensure-ctcss-pl-tone-fields-are-always-normalized-e-g-100-0-1000-or-the-appropriate-integer-representation-the-backend-expects-and-that-city-state-extraction-handles-all-50-us-states-reliably",
+      "featureTitle": "Update the CHIRP CSV parser (`frontend/src/utils/csvParser.ts`) to correctly map all CHIRP CSV columns — including Location, Name, Frequency, Duplex, Offset, Tone, rToneFreq, cToneFreq, DtcsCode, Mode, and Comment — into the backend Repeater type. Ensure CTCSS/PL tone fields are always normalized (e.g., '100.0' → 1000 or the appropriate integer representation the backend expects) and that city/state extraction handles all 50 US states reliably.",
       "files": [
-        "frontend/src/services/repeaterBookApi.ts"
+        "frontend/src/utils/csvParser.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -13,18 +13,40 @@
         "shadcn-ui@1.0.0",
         "build-template-react@1.0.0",
         "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0"
       ],
       "testIds": [
-        "REQ-16"
+        "REQ-2"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-update-the-directory-page-frontend-src-pages-directorypage-tsx-to-integrate-the-repeaterbook-api-when-a-user-selects-a-state-or-enters-a-city-in-the-filter-bar-query-the-repeaterbook-api-for-live-repeater-data-in-addition-to-the-locally-stored-repeaters-display-a-loading-indicator-while-fetching-show-repeaterbook-results-in-the-same-repeatercard-grid-alongside-local-results-include-a-visible-source-badge-or-label-on-each-card-indicating-whether-the-data-is-from-repeaterbook-live-or-local-user-submitted-both-sources-must-coexist-do-not-remove-or-hide-existing-local-repeater-display",
-      "featureTitle": "Update the Directory Page (frontend/src/pages/DirectoryPage.tsx) to integrate the RepeaterBook API. When a user selects a state or enters a city in the filter bar, query the RepeaterBook API for live repeater data in addition to the locally stored repeaters. Display a loading indicator while fetching. Show RepeaterBook results in the same RepeaterCard grid alongside local results. Include a visible source badge or label on each card indicating whether the data is from 'RepeaterBook' (live) or 'Local' (user-submitted). Both sources must coexist — do not remove or hide existing local repeater display.",
+      "featureId": "feature-update-the-admin-csv-import-page-frontend-src-pages-adminpage-tsx-so-that-after-parsing-the-chirp-csv-file-all-parsed-repeaters-are-sent-to-the-backend-bulkaddrepeaters-canister-function-in-batches-e-g-200-records-per-batch-with-progress-feedback-shown-to-the-user-after-all-batches-complete-display-the-total-number-of-repeaters-successfully-saved-the-number-skipped-and-any-error-details",
+      "featureTitle": "Update the Admin CSV import page (`frontend/src/pages/AdminPage.tsx`) so that after parsing the CHIRP CSV file, all parsed repeaters are sent to the backend `bulkAddRepeaters` canister function in batches (e.g., 200 records per batch) with progress feedback shown to the user. After all batches complete, display the total number of repeaters successfully saved, the number skipped, and any error details.",
       "files": [
-        "frontend/src/components/RepeaterCard.tsx",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/AdminPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-the-repeater-directory-page-frontend-src-pages-directorypage-tsx-correctly-loads-and-displays-all-stored-repeaters-from-the-canister-including-those-imported-via-csv-fix-any-pagination-infinite-scroll-or-query-limit-issues-that-could-cause-only-a-subset-e-g-17-of-stored-repeaters-to-be-displayed-the-page-should-show-the-full-count-and-allow-filtering-searching-across-all-stored-repeaters",
+      "featureTitle": "Ensure the repeater directory page (`frontend/src/pages/DirectoryPage.tsx`) correctly loads and displays all stored repeaters from the canister, including those imported via CSV. Fix any pagination, infinite scroll, or query limit issues that could cause only a subset (e.g., 17) of stored repeaters to be displayed. The page should show the full count and allow filtering/searching across all stored repeaters.",
+      "files": [
+        "frontend/src/hooks/useQueries.ts",
         "frontend/src/pages/DirectoryPage.tsx"
       ],
       "components": [
@@ -33,19 +55,21 @@
         "shadcn-ui@1.0.0",
         "build-template-react@1.0.0",
         "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0"
       ],
       "testIds": [
-        "REQ-17"
+        "REQ-4"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-ensure-the-repeaterdetailmodal-frontend-src-components-repeaterdetailmodal-tsx-works-correctly-for-both-local-repeaters-and-repeaterbook-sourced-repeaters-for-repeaterbook-entries-that-lack-certain-fields-display-n-a-for-missing-values-disable-the-favorite-button-for-repeaterbook-entries-and-show-a-tooltip-explaining-that-favoriting-is-only-available-for-locally-submitted-repeaters",
-      "featureTitle": "Ensure the RepeaterDetailModal (frontend/src/components/RepeaterDetailModal.tsx) works correctly for both local repeaters and RepeaterBook-sourced repeaters. For RepeaterBook entries that lack certain fields, display 'N/A' for missing values. Disable the favorite button for RepeaterBook entries and show a tooltip explaining that favoriting is only available for locally submitted repeaters.",
+      "featureId": "feature-require-internet-identity-authentication-to-access-the-csv-import-functionality-users-who-are-not-logged-in-should-see-a-login-prompt-instead-of-the-import-ui-authenticated-admins-should-be-able-to-trigger-bulk-imports-while-unauthenticated-or-non-admin-users-cannot",
+      "featureTitle": "Require Internet Identity authentication to access the CSV import functionality. Users who are not logged in should see a login prompt instead of the import UI. Authenticated admins should be able to trigger bulk imports, while unauthenticated or non-admin users cannot.",
       "files": [
-        "frontend/src/components/FavoriteButton.tsx",
-        "frontend/src/components/RepeaterDetailModal.tsx"
+        "frontend/src/components/Header.tsx",
+        "frontend/src/pages/AdminDashboardPage.tsx",
+        "frontend/src/pages/AdminPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -53,29 +77,11 @@
         "shadcn-ui@1.0.0",
         "build-template-react@1.0.0",
         "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
+        "github-export-icp-cli@1.0.0",
+        "http-outcalls@3.0.0"
       ],
       "testIds": [
-        "REQ-18"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-add-a-prominent-informational-banner-on-the-directory-page-frontend-src-pages-directorypage-tsx-stating-that-live-ham-radio-repeater-data-is-sourced-from-repeaterbook-com-and-that-gmrs-repeaters-can-be-submitted-manually-via-the-submission-form-include-a-clickable-link-to-https-www-repeaterbook-com-that-opens-in-a-new-tab-style-the-banner-consistent-with-the-existing-dark-ham-radio-theme-using-amber-orange-accent-colors",
-      "featureTitle": "Add a prominent informational banner on the Directory Page (frontend/src/pages/DirectoryPage.tsx) stating that live ham radio repeater data is sourced from RepeaterBook.com, and that GMRS repeaters can be submitted manually via the submission form. Include a clickable link to https://www.repeaterbook.com that opens in a new tab. Style the banner consistent with the existing dark ham-radio theme using amber/orange accent colors.",
-      "files": [
-        "frontend/src/pages/DirectoryPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-19"
+        "REQ-5"
       ],
       "confidence": "high"
     }

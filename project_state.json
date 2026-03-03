@@ -1,133 +1,45 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 7,
-  "summary": "US Repeater Network — a professional ham radio repeater directory for the United States. Features a fun logo with antenna tower/HT/base station, full RepeaterBook-style database fields, zip code proximity filtering, ~20-30 sample repeaters across 5 states, user submission system, hardcoded passphrase admin dashboard (WendellAdmin2024) for Wendell to approve submissions, and favorites feature for logged-in users via Internet Identity. Now integrating live RepeaterBook API (https://www.repeaterbook.com/api/export.php) for real ham radio repeater data; GMRS repeaters handled via manual user submissions.",
+  "projectStateVersion": 3,
+  "summary": "CHIRP CSV Repeater Import App — allows users to upload a CHIRP CSV export file via browser, parse and save all repeater data to a backend canister for persistent storage, view and search the repeater list, and manage repeaters with Internet Identity login.",
   "architectural_notes": [
-    "Admin access protected by hardcoded passphrase (not Internet Identity)",
-    "Proximity filtering uses built-in zip code coordinate dataset for distance calculations — no GPS or map rendering",
-    "User authentication via Internet Identity for favorites and submissions",
-    "RepeaterBook API integration calls https://www.repeaterbook.com/api/export.php for live repeater data; no API key required but rate limits must be respected"
+    "Backend uses Internet Computer canister for persistent repeater storage",
+    "CHIRP CSV format must be parsed and stored in canister on import"
   ],
-  "known_issues": [],
+  "known_issues": [
+    "Previously only 17 of 4000+ imported repeaters were displaying — root cause: data not persisted to canister"
+  ],
   "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-build-a-professional-public-facing-repeater-directory-page-as-the-main-landing-screen-display-approved-repeaters-in-a-searchable-filterable-table-card-list-include-filter-controls-for-state-dropdown-city-text-input-zip-code-radius-selector-10-25-50-100-miles-each-repeater-entry-must-display-call-sign-frequency-offset-ctcss-dcs-tone-city-state-sponsor-coverage-and-a-view-details-action-logged-in-users-see-a-star-favorite-button-on-each-entry",
-      "title": "Build a professional public-facing repeater directory page as the main landing screen. Display approved repeaters in a searchable, filterable table/card list. Include filter controls for: state (dropdown), city (text input), zip code + radius selector (10/25/50/100 miles). Each repeater entry must display: call sign, frequency, offset, CTCSS/DCS tone, city, state, sponsor, coverage, and a 'View Details' action. Logged-in users see a star/favorite button on each entry.",
+      "id": "feature-update-the-chirp-csv-parser-frontend-src-utils-csvparser-ts-to-correctly-map-all-chirp-csv-columns-including-location-name-frequency-duplex-offset-tone-rtonefreq-ctonefreq-dtcscode-mode-and-comment-into-the-backend-repeater-type-ensure-ctcss-pl-tone-fields-are-always-normalized-e-g-100-0-1000-or-the-appropriate-integer-representation-the-backend-expects-and-that-city-state-extraction-handles-all-50-us-states-reliably",
+      "title": "Update the CHIRP CSV parser (`frontend/src/utils/csvParser.ts`) to correctly map all CHIRP CSV columns — including Location, Name, Frequency, Duplex, Offset, Tone, rToneFreq, cToneFreq, DtcsCode, Mode, and Comment — into the backend Repeater type. Ensure CTCSS/PL tone fields are always normalized (e.g., '100.0' → 1000 or the appropriate integer representation the backend expects) and that city/state extraction handles all 50 US states reliably.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-admin-csv-import-page-frontend-src-pages-adminpage-tsx-so-that-after-parsing-the-chirp-csv-file-all-parsed-repeaters-are-sent-to-the-backend-bulkaddrepeaters-canister-function-in-batches-e-g-200-records-per-batch-with-progress-feedback-shown-to-the-user-after-all-batches-complete-display-the-total-number-of-repeaters-successfully-saved-the-number-skipped-and-any-error-details",
+      "title": "Update the Admin CSV import page (`frontend/src/pages/AdminPage.tsx`) so that after parsing the CHIRP CSV file, all parsed repeaters are sent to the backend `bulkAddRepeaters` canister function in batches (e.g., 200 records per batch) with progress feedback shown to the user. After all batches complete, display the total number of repeaters successfully saved, the number skipped, and any error details.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-repeater-directory-page-frontend-src-pages-directorypage-tsx-correctly-loads-and-displays-all-stored-repeaters-from-the-canister-including-those-imported-via-csv-fix-any-pagination-infinite-scroll-or-query-limit-issues-that-could-cause-only-a-subset-e-g-17-of-stored-repeaters-to-be-displayed-the-page-should-show-the-full-count-and-allow-filtering-searching-across-all-stored-repeaters",
+      "title": "Ensure the repeater directory page (`frontend/src/pages/DirectoryPage.tsx`) correctly loads and displays all stored repeaters from the canister, including those imported via CSV. Fix any pagination, infinite scroll, or query limit issues that could cause only a subset (e.g., 17) of stored repeaters to be displayed. The page should show the full count and allow filtering/searching across all stored repeaters.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-require-internet-identity-authentication-to-access-the-csv-import-functionality-users-who-are-not-logged-in-should-see-a-login-prompt-instead-of-the-import-ui-authenticated-admins-should-be-able-to-trigger-bulk-imports-while-unauthenticated-or-non-admin-users-cannot",
+      "title": "Require Internet Identity authentication to access the CSV import functionality. Users who are not logged in should see a login prompt instead of the import UI. Authenticated admins should be able to trigger bulk imports, while unauthenticated or non-admin users cannot.",
       "reqIds": [
         "REQ-5"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-create-a-repeater-detail-modal-or-page-that-shows-all-fields-for-a-selected-repeater-frequency-offset-call-sign-sponsor-city-state-zip-ctcss-tone-dcs-code-tone-mode-coverage-description-operational-notes-autopatch-info-link-info-and-status-include-a-favorite-toggle-for-logged-in-users",
-      "title": "Create a repeater detail modal or page that shows all fields for a selected repeater: frequency, offset, call sign, sponsor, city, state, zip, CTCSS tone, DCS code, tone mode, coverage description, operational notes, autopatch info, link info, and status. Include a favorite toggle for logged-in users.",
-      "reqIds": [
-        "REQ-6"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-build-a-user-repeater-submission-form-accessible-from-the-main-directory-page-the-form-must-include-all-repeater-fields-frequency-offset-call-sign-sponsor-city-state-zip-ctcss-dcs-tones-coverage-operational-notes-autopatch-info-link-info-submissions-are-sent-to-the-backend-with-pending-status-show-a-success-message-confirming-the-submission-is-awaiting-admin-review",
-      "title": "Build a user repeater submission form accessible from the main directory page. The form must include all repeater fields (frequency, offset, call sign, sponsor, city, state, zip, CTCSS/DCS tones, coverage, operational notes, autopatch info, link info). Submissions are sent to the backend with pending status. Show a success message confirming the submission is awaiting admin review.",
-      "reqIds": [
-        "REQ-7"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-build-an-admin-dashboard-accessible-via-a-protected-route-e-g-admin-entry-requires-entering-a-hardcoded-passphrase-decided-at-implementation-time-e-g-wendelladmin2024-the-dashboard-lists-all-pending-repeater-submissions-with-full-details-and-approve-reject-action-buttons-approved-repeaters-become-visible-in-the-public-directory-immediately-include-a-tab-or-section-for-viewing-all-approved-repeaters-with-a-delete-option",
-      "title": "Build an admin dashboard accessible via a protected route (e.g., /admin). Entry requires entering a hardcoded passphrase (decided at implementation time, e.g., 'WendellAdmin2024'). The dashboard lists all pending repeater submissions with full details and Approve / Reject action buttons. Approved repeaters become visible in the public directory immediately. Include a tab or section for viewing all approved repeaters with a delete option.",
-      "reqIds": [
-        "REQ-8"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-integrate-internet-identity-login-into-the-app-header-navigation-show-a-login-button-when-unauthenticated-and-the-user-s-principal-abbreviated-with-a-logout-button-when-authenticated-favorites-functionality-requires-login-prompt-unauthenticated-users-to-log-in-when-they-attempt-to-favorite-a-repeater",
-      "title": "Integrate Internet Identity login into the app header/navigation. Show a 'Login' button when unauthenticated and the user's principal (abbreviated) with a 'Logout' button when authenticated. Favorites functionality requires login; prompt unauthenticated users to log in when they attempt to favorite a repeater.",
-      "reqIds": [
-        "REQ-9"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-apply-a-professional-high-energy-ham-radio-communications-theme-throughout-the-app-use-a-dark-navy-charcoal-background-with-bright-amber-orange-and-green-accent-colors-reminiscent-of-radio-equipment-and-rf-signal-meters-use-a-bold-technical-sans-serif-typography-the-layout-should-feel-like-a-professional-operations-console-clean-grid-based-directory-prominent-search-bar-and-clear-status-indicators-active-inactive-with-colored-badges-apply-this-theme-consistently-across-all-pages",
-      "title": "Apply a professional, high-energy ham radio / communications theme throughout the app. Use a dark navy/charcoal background with bright amber/orange and green accent colors reminiscent of radio equipment and RF signal meters. Use a bold, technical sans-serif typography. The layout should feel like a professional operations console — clean grid-based directory, prominent search bar, and clear status indicators (active/inactive) with colored badges. Apply this theme consistently across all pages.",
-      "reqIds": [
-        "REQ-10"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-display-the-generated-logo-image-antenna-tower-logo-png-prominently-in-the-app-header-navigation-bar-alongside-the-site-name-us-repeater-network",
-      "title": "Display the generated logo image (antenna-tower-logo.png) prominently in the app header/navigation bar alongside the site name 'US Repeater Network'.",
-      "reqIds": [
-        "REQ-11"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-create-a-frontend-service-utility-module-that-calls-the-repeaterbook-public-api-at-https-www-repeaterbook-com-api-export-php-the-module-must-support-querying-by-state-using-the-state-id-parameter-with-2-letter-state-abbreviation-by-city-using-city-parameter-and-optionally-by-frequency-it-must-parse-the-json-response-and-map-repeaterbook-fields-frequency-offset-uplink-tone-downlink-tone-tsq-call-sign-nearest-city-state-use-operational-status-etc-into-the-app-s-internal-repeater-shape-so-it-is-compatible-with-existing-repeatercard-and-repeaterdetailmodal-components",
-      "title": "Create a frontend service/utility module that calls the RepeaterBook public API at https://www.repeaterbook.com/api/export.php. The module must support querying by state (using the 'state_id' parameter with 2-letter state abbreviation), by city (using 'city' parameter), and optionally by frequency. It must parse the JSON response and map RepeaterBook fields (Frequency, Offset, Uplink Tone, Downlink Tone, TSQ, Call Sign, Nearest City, State, Use, Operational Status, etc.) into the app's internal Repeater shape so it is compatible with existing RepeaterCard and RepeaterDetailModal components.",
-      "reqIds": [
-        "REQ-12"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-the-directory-page-frontend-src-pages-directorypage-tsx-to-integrate-the-repeaterbook-api-when-a-user-selects-a-state-or-enters-a-city-in-the-filter-bar-the-page-should-query-the-repeaterbook-api-for-live-repeater-data-in-addition-to-or-as-a-toggle-alongside-the-locally-stored-repeaters-display-a-loading-indicator-while-fetching-show-repeaterbook-results-in-the-same-repeatercard-grid-include-a-visible-source-badge-or-label-on-each-card-indicating-whether-the-data-is-from-repeaterbook-live-or-local-user-submitted-do-not-remove-the-existing-local-repeater-display-both-sources-should-coexist",
-      "title": "Update the Directory Page (frontend/src/pages/DirectoryPage.tsx) to integrate the RepeaterBook API. When a user selects a state or enters a city in the filter bar, the page should query the RepeaterBook API for live repeater data in addition to (or as a toggle alongside) the locally stored repeaters. Display a loading indicator while fetching. Show RepeaterBook results in the same RepeaterCard grid. Include a visible source badge or label on each card indicating whether the data is from 'RepeaterBook' (live) or 'Local' (user-submitted). Do not remove the existing local repeater display — both sources should coexist.",
-      "reqIds": [
-        "REQ-13"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-ensure-the-repeaterdetail-modal-frontend-src-components-repeaterdetailmodal-tsx-works-correctly-for-both-local-repeaters-and-repeaterbook-sourced-repeaters-repeaterbook-results-may-not-have-all-fields-e-g-no-repeaterid-for-favorites-for-repeaterbook-entries-gracefully-handle-missing-fields-by-showing-n-a-and-disable-the-favorite-button-with-a-tooltip-explaining-that-favoriting-is-only-available-for-locally-submitted-repeaters",
-      "title": "Ensure the RepeaterDetail modal (frontend/src/components/RepeaterDetailModal.tsx) works correctly for both local repeaters and RepeaterBook-sourced repeaters. RepeaterBook results may not have all fields (e.g., no repeaterId for favorites). For RepeaterBook entries, gracefully handle missing fields by showing 'N/A' and disable the favorite button with a tooltip explaining that favoriting is only available for locally submitted repeaters.",
-      "reqIds": [
-        "REQ-14"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-a-prominent-informational-banner-or-section-on-the-directory-page-stating-that-live-ham-radio-repeater-data-is-sourced-from-repeaterbook-com-and-that-gmrs-repeaters-can-be-submitted-manually-via-the-submission-form-include-a-link-to-repeaterbook-com-https-www-repeaterbook-com-that-opens-in-a-new-tab-style-the-banner-consistent-with-the-existing-ham-radio-dark-theme",
-      "title": "Add a prominent informational banner or section on the Directory Page stating that live ham radio repeater data is sourced from RepeaterBook.com, and that GMRS repeaters can be submitted manually via the submission form. Include a link to RepeaterBook.com (https://www.repeaterbook.com) that opens in a new tab. Style the banner consistent with the existing ham-radio dark theme.",
-      "reqIds": [
-        "REQ-15"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-create-a-frontend-service-utility-module-at-frontend-src-services-repeaterbookapi-ts-that-calls-the-repeaterbook-public-api-at-https-www-repeaterbook-com-api-export-php-the-module-must-support-querying-by-state-using-the-state-id-parameter-with-2-letter-state-abbreviation-by-city-using-the-city-parameter-and-optionally-by-frequency-it-must-parse-the-json-response-and-map-repeaterbook-fields-frequency-offset-uplink-tone-downlink-tone-tsq-call-sign-nearest-city-state-use-operational-status-etc-into-the-app-s-internal-repeater-shape-so-it-is-compatible-with-existing-repeatercard-and-repeaterdetailmodal-components-mark-these-entries-with-a-source-field-set-to-repeaterbook-to-distinguish-them-from-locally-submitted-repeaters",
-      "title": "Create a frontend service/utility module at frontend/src/services/repeaterBookApi.ts that calls the RepeaterBook public API at https://www.repeaterbook.com/api/export.php. The module must support querying by state (using the 'state_id' parameter with 2-letter state abbreviation), by city (using the 'city' parameter), and optionally by frequency. It must parse the JSON response and map RepeaterBook fields (Frequency, Offset, Uplink Tone, Downlink Tone, TSQ, Call Sign, Nearest City, State, Use, Operational Status, etc.) into the app's internal Repeater shape so it is compatible with existing RepeaterCard and RepeaterDetailModal components. Mark these entries with a source field set to 'repeaterbook' to distinguish them from locally submitted repeaters.",
-      "reqIds": [
-        "REQ-16"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-update-the-directory-page-frontend-src-pages-directorypage-tsx-to-integrate-the-repeaterbook-api-when-a-user-selects-a-state-or-enters-a-city-in-the-filter-bar-query-the-repeaterbook-api-for-live-repeater-data-in-addition-to-the-locally-stored-repeaters-display-a-loading-indicator-while-fetching-show-repeaterbook-results-in-the-same-repeatercard-grid-alongside-local-results-include-a-visible-source-badge-or-label-on-each-card-indicating-whether-the-data-is-from-repeaterbook-live-or-local-user-submitted-both-sources-must-coexist-do-not-remove-or-hide-existing-local-repeater-display",
-      "title": "Update the Directory Page (frontend/src/pages/DirectoryPage.tsx) to integrate the RepeaterBook API. When a user selects a state or enters a city in the filter bar, query the RepeaterBook API for live repeater data in addition to the locally stored repeaters. Display a loading indicator while fetching. Show RepeaterBook results in the same RepeaterCard grid alongside local results. Include a visible source badge or label on each card indicating whether the data is from 'RepeaterBook' (live) or 'Local' (user-submitted). Both sources must coexist — do not remove or hide existing local repeater display.",
-      "reqIds": [
-        "REQ-17"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-ensure-the-repeaterdetailmodal-frontend-src-components-repeaterdetailmodal-tsx-works-correctly-for-both-local-repeaters-and-repeaterbook-sourced-repeaters-for-repeaterbook-entries-that-lack-certain-fields-display-n-a-for-missing-values-disable-the-favorite-button-for-repeaterbook-entries-and-show-a-tooltip-explaining-that-favoriting-is-only-available-for-locally-submitted-repeaters",
-      "title": "Ensure the RepeaterDetailModal (frontend/src/components/RepeaterDetailModal.tsx) works correctly for both local repeaters and RepeaterBook-sourced repeaters. For RepeaterBook entries that lack certain fields, display 'N/A' for missing values. Disable the favorite button for RepeaterBook entries and show a tooltip explaining that favoriting is only available for locally submitted repeaters.",
-      "reqIds": [
-        "REQ-18"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-add-a-prominent-informational-banner-on-the-directory-page-frontend-src-pages-directorypage-tsx-stating-that-live-ham-radio-repeater-data-is-sourced-from-repeaterbook-com-and-that-gmrs-repeaters-can-be-submitted-manually-via-the-submission-form-include-a-clickable-link-to-https-www-repeaterbook-com-that-opens-in-a-new-tab-style-the-banner-consistent-with-the-existing-dark-ham-radio-theme-using-amber-orange-accent-colors",
-      "title": "Add a prominent informational banner on the Directory Page (frontend/src/pages/DirectoryPage.tsx) stating that live ham radio repeater data is sourced from RepeaterBook.com, and that GMRS repeaters can be submitted manually via the submission form. Include a clickable link to https://www.repeaterbook.com that opens in a new tab. Style the banner consistent with the existing dark ham-radio theme using amber/orange accent colors.",
-      "reqIds": [
-        "REQ-19"
       ],
       "version": 1
     }
@@ -135,82 +47,34 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Fun logo with antenna tower, HT, and base station",
+      "summary": "Browser-based CHIRP CSV file upload to import repeater data",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-2",
-      "summary": "Full RepeaterBook-style fields (frequency, offset, call sign, sponsor, CTCSS/DCS tones, coverage, operational notes, autopatch info)",
+      "summary": "Persistent canister storage for all imported repeaters (4000+)",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-3",
-      "summary": "Search by state, city, and zip code with 10/25/50/100 mile proximity filtering using built-in zip code coordinate dataset",
+      "summary": "View and search the saved repeater list",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-4",
-      "summary": "20-30 sample repeaters pre-loaded across 5 states to simulate a real directory",
+      "summary": "Internet Identity login required to save and manage repeaters",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-5",
-      "summary": "User submission system for adding/updating repeaters",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Admin dashboard protected by hardcoded passphrase for Wendell to review and approve submissions",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-7",
-      "summary": "Favorite repeaters feature for logged-in users via Internet Identity",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-8",
-      "summary": "Create a Motoko backend actor that stores a complete repeater data model with all RepeaterBook-style fields: frequency (Float), offset (Float), call sign (Text), sponsor (Text), city (Text), state (Text), zip code (Text), CTCSS tone (Text), DCS code (Text), tone mode (Text), coverage description (Text), operational notes (Text), autopatch info (Text), link info (Text), status (active/inactive), submission status (pending/approved/rejected), submitted by (Text), and a unique ID. Provide CRUD operations: add repeater (creates with pending status), approve/reject repeater (admin only, passphrase-protected), get approved repeaters, get pending repeaters (admin), update repeater, delete repeater (admin).",
+      "summary": "Expand the backend canister storage to support bulk insertion of 4,000+ repeaters in a single operation. Add or update a `bulkAddRepeaters` function in the main actor that accepts an array of Repeater records and stores all of them persistently in a stable data structure (e.g., TrieMap or HashMap keyed by a unique ID). Ensure no records are silently dropped or truncated during batch inserts.",
       "reqIds": [
         "REQ-1"
       ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-9",
-      "summary": "Pre-load approximately 20–30 sample repeaters spread across 5 US states (e.g., California, Texas, Florida, New York, and Illinois) as initial seed data in the backend. Each record must be fully populated with realistic ham radio repeater values including frequency, offset, call sign, sponsor, tones, coverage, and operational notes, and must be set to approved status.",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-10",
-      "summary": "Implement zip code proximity filtering in the backend using a built-in zip code coordinate dataset (latitude/longitude lookup table embedded in the Motoko actor). Provide a search function that accepts a zip code and a radius (10, 25, 50, or 100 miles) and returns all approved repeaters whose zip code falls within that radius using the Haversine formula for distance calculation.",
-      "reqIds": [
-        "REQ-3"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-11",
-      "summary": "Implement a favorites system in the backend. Authenticated users (identified by their Internet Identity principal) can add or remove approved repeaters from their favorites list. Provide getFavorites(principal), addFavorite(principal, repeaterId), and removeFavorite(principal, repeaterId) functions.",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-12",
-      "summary": "Integrate RepeaterBook API (https://www.repeaterbook.com/api/export.php) to fetch live real ham radio repeater data by state, city, or frequency when users search, replacing or supplementing sample data. Keep existing submission system for GMRS repeaters.",
-      "reqIds": [],
       "status": "pending"
     }
   ],

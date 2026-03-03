@@ -7,6 +7,11 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
+export interface http_request_result {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
+}
 export interface NewRepeater {
     status: Status;
     dcsCode: string;
@@ -25,7 +30,17 @@ export interface NewRepeater {
     linkInfo: string;
     ctcssTone: string;
 }
+export type Miles = bigint;
+export interface TransformationOutput {
+    status: bigint;
+    body: Uint8Array;
+    headers: Array<http_header>;
+}
 export type Time = bigint;
+export interface TransformationInput {
+    context: Uint8Array;
+    response: http_request_result;
+}
 export interface Repeater {
     id: bigint;
     status: Status;
@@ -69,7 +84,10 @@ export interface UserProfile {
     name: string;
     callSign: string;
 }
-export type Miles = bigint;
+export interface http_header {
+    value: string;
+    name: string;
+}
 export enum Status {
     active = "active",
     inactive = "inactive"
@@ -87,9 +105,16 @@ export enum UserRole {
 export interface backendInterface {
     addFavorite(repeaterId: bigint): Promise<void>;
     addRepeater(data: NewRepeater): Promise<Repeater>;
-    approveRepeater(repeaterId: bigint, passphrase: string, approve: boolean): Promise<void>;
+    approveRepeater(repeaterId: bigint, approve: boolean): Promise<void>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    deleteRepeater(repeaterId: bigint, passphrase: string): Promise<void>;
+    bulkAddRepeaters(newRepeaters: Array<Repeater>): Promise<void>;
+    deleteRepeater(repeaterId: bigint): Promise<void>;
+    fetchAllRepeaterBookRepeaters(): Promise<string>;
+    fetchRepeatersByCityFromRepeaterBook(stateAbbreviation: string, city: string): Promise<string>;
+    fetchRepeatersByCountyFromRepeaterBook(stateAbbreviation: string, county: string): Promise<string>;
+    fetchRepeatersByStateFromRepeaterBook(stateAbbreviation: string): Promise<string>;
+    fetchRepeatersByZipFromRepeaterBook(zipCode: string): Promise<string>;
+    fetchRepeatersWithinRadiusFromRepeaterBook(zipCode: string, radius: bigint): Promise<string>;
     getApprovedCitiesByState(state: string): Promise<Array<string>>;
     getApprovedRepeaters(): Promise<Array<Repeater>>;
     getApprovedStates(): Promise<Array<string>>;
@@ -100,8 +125,10 @@ export interface backendInterface {
     getRepeatersByCityAndState(state: string, city: string): Promise<Array<Repeater>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
+    registerAdmin(passphrase: string): Promise<void>;
     removeFavorite(repeaterId: bigint): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     searchByZipCode(zipCode: string, radius: Miles): Promise<Array<Repeater>>;
-    updateRepeater(repeaterId: bigint, passphrase: string, data: UpdateRepeaterData): Promise<Repeater>;
+    transform(input: TransformationInput): Promise<TransformationOutput>;
+    updateRepeater(repeaterId: bigint, data: UpdateRepeaterData): Promise<Repeater>;
 }

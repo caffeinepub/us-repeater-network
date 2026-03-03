@@ -56,6 +56,15 @@ export type SubmissionStatus = { 'pending' : null } |
   { 'approved' : null } |
   { 'rejected' : null };
 export type Time = bigint;
+export interface TransformationInput {
+  'context' : Uint8Array,
+  'response' : http_request_result,
+}
+export interface TransformationOutput {
+  'status' : bigint,
+  'body' : Uint8Array,
+  'headers' : Array<http_header>,
+}
 export interface UpdateRepeaterData {
   'status' : [] | [Status],
   'dcsCode' : [] | [string],
@@ -81,13 +90,35 @@ export interface UserProfile {
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface http_header { 'value' : string, 'name' : string }
+export interface http_request_result {
+  'status' : bigint,
+  'body' : Uint8Array,
+  'headers' : Array<http_header>,
+}
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'addFavorite' : ActorMethod<[bigint], undefined>,
   'addRepeater' : ActorMethod<[NewRepeater], Repeater>,
-  'approveRepeater' : ActorMethod<[bigint, string, boolean], undefined>,
+  'approveRepeater' : ActorMethod<[bigint, boolean], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'deleteRepeater' : ActorMethod<[bigint, string], undefined>,
+  'bulkAddRepeaters' : ActorMethod<[Array<Repeater>], undefined>,
+  'deleteRepeater' : ActorMethod<[bigint], undefined>,
+  'fetchAllRepeaterBookRepeaters' : ActorMethod<[], string>,
+  'fetchRepeatersByCityFromRepeaterBook' : ActorMethod<
+    [string, string],
+    string
+  >,
+  'fetchRepeatersByCountyFromRepeaterBook' : ActorMethod<
+    [string, string],
+    string
+  >,
+  'fetchRepeatersByStateFromRepeaterBook' : ActorMethod<[string], string>,
+  'fetchRepeatersByZipFromRepeaterBook' : ActorMethod<[string], string>,
+  'fetchRepeatersWithinRadiusFromRepeaterBook' : ActorMethod<
+    [string, bigint],
+    string
+  >,
   'getApprovedCitiesByState' : ActorMethod<[string], Array<string>>,
   'getApprovedRepeaters' : ActorMethod<[], Array<Repeater>>,
   'getApprovedStates' : ActorMethod<[], Array<string>>,
@@ -98,13 +129,12 @@ export interface _SERVICE {
   'getRepeatersByCityAndState' : ActorMethod<[string, string], Array<Repeater>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'registerAdmin' : ActorMethod<[string], undefined>,
   'removeFavorite' : ActorMethod<[bigint], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'searchByZipCode' : ActorMethod<[string, Miles], Array<Repeater>>,
-  'updateRepeater' : ActorMethod<
-    [bigint, string, UpdateRepeaterData],
-    Repeater
-  >,
+  'transform' : ActorMethod<[TransformationInput], TransformationOutput>,
+  'updateRepeater' : ActorMethod<[bigint, UpdateRepeaterData], Repeater>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

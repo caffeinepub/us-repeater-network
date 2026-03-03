@@ -1,12 +1,13 @@
 # Specification
 
 ## Summary
-**Goal:** Integrate the RepeaterBook public API into the Directory Page so that live ham radio repeater data is fetched and displayed alongside locally submitted repeaters.
+**Goal:** Fix the CHIRP CSV import pipeline so that all 4,000+ repeaters are correctly parsed, stored, and displayed in the US Repeater Network application.
 
 **Planned changes:**
-- Create `frontend/src/services/repeaterBookApi.ts` that queries `https://www.repeaterbook.com/api/export.php` by state abbreviation, optional city, and optional frequency, maps the response to the app's internal Repeater shape, marks entries with `source: 'repeaterbook'`, and returns an empty array on network failure
-- Update `DirectoryPage.tsx` to fetch RepeaterBook data when a state or city filter is selected, show a loading indicator during the fetch, render RepeaterBook results in the same RepeaterCard grid as local repeaters, and display a source badge ("RepeaterBook" or "Local") on each card
-- Update `RepeaterDetailModal.tsx` to display `N/A` for missing fields on RepeaterBook entries, and disable the favorite button for RepeaterBook entries with a tooltip explaining favoriting is only available for local repeaters
-- Add an informational banner on the Directory Page noting that live ham radio data is sourced from RepeaterBook.com (with a link opening in a new tab) and that GMRS repeaters can be submitted via the submission form, styled with the existing dark navy/charcoal theme and amber/orange accents
+- Add a `bulkAddRepeaters` function to the backend canister (main.mo) that accepts an array of Repeater records and persists all of them in stable storage without truncation or data loss
+- Fix the CHIRP CSV parser (`csvParser.ts`) to correctly map all CHIRP CSV columns (Location, Name, Frequency, Duplex, Offset, Tone, rToneFreq, cToneFreq, DtcsCode, Mode, Comment), normalize CTCSS/PL tone values, and reliably extract city/state for all 50 US states
+- Update the Admin page (`AdminPage.tsx`) to send all parsed repeaters to the canister in batches (e.g., 200 records per batch) with a progress indicator (e.g., "Saving batch 3 of 20...") and a final summary showing total saved, total skipped, and any errors
+- Fix the Directory page (`DirectoryPage.tsx`) to load and display all stored repeaters from the canister without hard-coded limits, and ensure pagination/infinite scroll, search, and filter work across the full dataset
+- Require Internet Identity authentication to access the CSV import UI; unauthenticated users see a login prompt, and only admin users can trigger bulk imports
 
-**User-visible outcome:** Users browsing the Directory Page will see live RepeaterBook data load automatically when filtering by state or city, displayed alongside local repeaters with clear source badges, and a banner crediting RepeaterBook.com.
+**User-visible outcome:** Admins can upload a CHIRP CSV file with 4,000+ repeaters, see batched progress during import, and have all repeaters fully saved and searchable in the repeater directory after a successful import.

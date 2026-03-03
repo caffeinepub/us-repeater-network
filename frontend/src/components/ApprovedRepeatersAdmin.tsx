@@ -21,17 +21,17 @@ import { toast } from 'sonner';
 interface ApprovedRepeatersAdminProps {
   repeaters: Repeater[];
   isLoading: boolean;
-  passphrase: string;
+  passphrase?: string;
 }
 
-function ApprovedRow({ repeater, passphrase }: { repeater: Repeater; passphrase: string }) {
+function ApprovedRow({ repeater }: { repeater: Repeater }) {
   const { mutateAsync: deleteRepeater, isPending } = useDeleteRepeater();
   const isActive = repeater.status === Status.active;
   const offsetStr = repeater.offset >= 0 ? `+${repeater.offset.toFixed(1)}` : repeater.offset.toFixed(1);
 
   const handleDelete = async () => {
     try {
-      await deleteRepeater({ repeaterId: repeater.id, passphrase });
+      await deleteRepeater(repeater.id);
       toast.success(`${repeater.callSign} deleted from directory.`);
     } catch (err: unknown) {
       const error = err as Error;
@@ -52,7 +52,7 @@ function ApprovedRow({ repeater, passphrase }: { repeater: Repeater; passphrase:
             variant="outline"
             className={`text-xs font-mono px-1.5 py-0 h-4 ${
               isActive
-                ? 'border-signal-green/40 text-signal-green bg-signal-green/10'
+                ? 'border-green-500/40 text-green-400 bg-green-500/10'
                 : 'border-muted-foreground/30 text-muted-foreground'
             }`}
           >
@@ -109,7 +109,7 @@ function ApprovedRow({ repeater, passphrase }: { repeater: Repeater; passphrase:
   );
 }
 
-export default function ApprovedRepeatersAdmin({ repeaters, isLoading, passphrase }: ApprovedRepeatersAdminProps) {
+export default function ApprovedRepeatersAdmin({ repeaters, isLoading }: ApprovedRepeatersAdminProps) {
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -133,7 +133,7 @@ export default function ApprovedRepeatersAdmin({ repeaters, isLoading, passphras
   return (
     <div className="space-y-2">
       {repeaters.map((r) => (
-        <ApprovedRow key={r.id.toString()} repeater={r} passphrase={passphrase} />
+        <ApprovedRow key={r.id.toString()} repeater={r} />
       ))}
     </div>
   );

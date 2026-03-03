@@ -68,6 +68,24 @@ export const UserProfile = IDL.Record({
   'callSign' : IDL.Text,
 });
 export const Miles = IDL.Nat;
+export const http_header = IDL.Record({
+  'value' : IDL.Text,
+  'name' : IDL.Text,
+});
+export const http_request_result = IDL.Record({
+  'status' : IDL.Nat,
+  'body' : IDL.Vec(IDL.Nat8),
+  'headers' : IDL.Vec(http_header),
+});
+export const TransformationInput = IDL.Record({
+  'context' : IDL.Vec(IDL.Nat8),
+  'response' : http_request_result,
+});
+export const TransformationOutput = IDL.Record({
+  'status' : IDL.Nat,
+  'body' : IDL.Vec(IDL.Nat8),
+  'headers' : IDL.Vec(http_header),
+});
 export const UpdateRepeaterData = IDL.Record({
   'status' : IDL.Opt(Status),
   'dcsCode' : IDL.Opt(IDL.Text),
@@ -90,9 +108,32 @@ export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'addFavorite' : IDL.Func([IDL.Nat], [], []),
   'addRepeater' : IDL.Func([NewRepeater], [Repeater], []),
-  'approveRepeater' : IDL.Func([IDL.Nat, IDL.Text, IDL.Bool], [], []),
+  'approveRepeater' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-  'deleteRepeater' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+  'bulkAddRepeaters' : IDL.Func([IDL.Vec(Repeater)], [], []),
+  'deleteRepeater' : IDL.Func([IDL.Nat], [], []),
+  'fetchAllRepeaterBookRepeaters' : IDL.Func([], [IDL.Text], []),
+  'fetchRepeatersByCityFromRepeaterBook' : IDL.Func(
+      [IDL.Text, IDL.Text],
+      [IDL.Text],
+      [],
+    ),
+  'fetchRepeatersByCountyFromRepeaterBook' : IDL.Func(
+      [IDL.Text, IDL.Text],
+      [IDL.Text],
+      [],
+    ),
+  'fetchRepeatersByStateFromRepeaterBook' : IDL.Func(
+      [IDL.Text],
+      [IDL.Text],
+      [],
+    ),
+  'fetchRepeatersByZipFromRepeaterBook' : IDL.Func([IDL.Text], [IDL.Text], []),
+  'fetchRepeatersWithinRadiusFromRepeaterBook' : IDL.Func(
+      [IDL.Text, IDL.Nat],
+      [IDL.Text],
+      [],
+    ),
   'getApprovedCitiesByState' : IDL.Func(
       [IDL.Text],
       [IDL.Vec(IDL.Text)],
@@ -115,6 +156,7 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'registerAdmin' : IDL.Func([IDL.Text], [], []),
   'removeFavorite' : IDL.Func([IDL.Nat], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'searchByZipCode' : IDL.Func(
@@ -122,11 +164,12 @@ export const idlService = IDL.Service({
       [IDL.Vec(Repeater)],
       ['query'],
     ),
-  'updateRepeater' : IDL.Func(
-      [IDL.Nat, IDL.Text, UpdateRepeaterData],
-      [Repeater],
-      [],
+  'transform' : IDL.Func(
+      [TransformationInput],
+      [TransformationOutput],
+      ['query'],
     ),
+  'updateRepeater' : IDL.Func([IDL.Nat, UpdateRepeaterData], [Repeater], []),
 });
 
 export const idlInitArgs = [];
@@ -189,6 +232,21 @@ export const idlFactory = ({ IDL }) => {
     'callSign' : IDL.Text,
   });
   const Miles = IDL.Nat;
+  const http_header = IDL.Record({ 'value' : IDL.Text, 'name' : IDL.Text });
+  const http_request_result = IDL.Record({
+    'status' : IDL.Nat,
+    'body' : IDL.Vec(IDL.Nat8),
+    'headers' : IDL.Vec(http_header),
+  });
+  const TransformationInput = IDL.Record({
+    'context' : IDL.Vec(IDL.Nat8),
+    'response' : http_request_result,
+  });
+  const TransformationOutput = IDL.Record({
+    'status' : IDL.Nat,
+    'body' : IDL.Vec(IDL.Nat8),
+    'headers' : IDL.Vec(http_header),
+  });
   const UpdateRepeaterData = IDL.Record({
     'status' : IDL.Opt(Status),
     'dcsCode' : IDL.Opt(IDL.Text),
@@ -211,9 +269,36 @@ export const idlFactory = ({ IDL }) => {
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'addFavorite' : IDL.Func([IDL.Nat], [], []),
     'addRepeater' : IDL.Func([NewRepeater], [Repeater], []),
-    'approveRepeater' : IDL.Func([IDL.Nat, IDL.Text, IDL.Bool], [], []),
+    'approveRepeater' : IDL.Func([IDL.Nat, IDL.Bool], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-    'deleteRepeater' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+    'bulkAddRepeaters' : IDL.Func([IDL.Vec(Repeater)], [], []),
+    'deleteRepeater' : IDL.Func([IDL.Nat], [], []),
+    'fetchAllRepeaterBookRepeaters' : IDL.Func([], [IDL.Text], []),
+    'fetchRepeatersByCityFromRepeaterBook' : IDL.Func(
+        [IDL.Text, IDL.Text],
+        [IDL.Text],
+        [],
+      ),
+    'fetchRepeatersByCountyFromRepeaterBook' : IDL.Func(
+        [IDL.Text, IDL.Text],
+        [IDL.Text],
+        [],
+      ),
+    'fetchRepeatersByStateFromRepeaterBook' : IDL.Func(
+        [IDL.Text],
+        [IDL.Text],
+        [],
+      ),
+    'fetchRepeatersByZipFromRepeaterBook' : IDL.Func(
+        [IDL.Text],
+        [IDL.Text],
+        [],
+      ),
+    'fetchRepeatersWithinRadiusFromRepeaterBook' : IDL.Func(
+        [IDL.Text, IDL.Nat],
+        [IDL.Text],
+        [],
+      ),
     'getApprovedCitiesByState' : IDL.Func(
         [IDL.Text],
         [IDL.Vec(IDL.Text)],
@@ -236,6 +321,7 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'registerAdmin' : IDL.Func([IDL.Text], [], []),
     'removeFavorite' : IDL.Func([IDL.Nat], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'searchByZipCode' : IDL.Func(
@@ -243,11 +329,12 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(Repeater)],
         ['query'],
       ),
-    'updateRepeater' : IDL.Func(
-        [IDL.Nat, IDL.Text, UpdateRepeaterData],
-        [Repeater],
-        [],
+    'transform' : IDL.Func(
+        [TransformationInput],
+        [TransformationOutput],
+        ['query'],
       ),
+    'updateRepeater' : IDL.Func([IDL.Nat, UpdateRepeaterData], [Repeater], []),
   });
 };
 

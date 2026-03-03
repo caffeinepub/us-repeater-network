@@ -1,81 +1,51 @@
-import React from "react";
-import { Star } from "lucide-react";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
-import { useGetFavorites, useAddFavorite, useRemoveFavorite } from "../hooks/useQueries";
-import { toast } from "sonner";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import React from 'react';
+import { Star } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface FavoriteButtonProps {
-  repeaterId: bigint;
+  isFavorite: boolean;
+  onClick: (e: React.MouseEvent) => void;
+  pending?: boolean;
   disabled?: boolean;
   disabledReason?: string;
 }
 
 export default function FavoriteButton({
-  repeaterId,
-  disabled = false,
-  disabledReason = "Favoriting is not available for this repeater",
+  isFavorite,
+  onClick,
+  pending,
+  disabled,
+  disabledReason,
 }: FavoriteButtonProps) {
-  const { identity } = useInternetIdentity();
-  const principalStr = identity?.getPrincipal().toString() ?? null;
-
-  const { data: favorites = [] } = useGetFavorites(principalStr);
-  const addFavorite = useAddFavorite();
-  const removeFavorite = useRemoveFavorite();
-
-  const isFavorited = favorites.some((f) => f.id === repeaterId);
-  const isLoading = addFavorite.isPending || removeFavorite.isPending;
-
-  const handleToggle = async () => {
-    if (disabled || !identity) return;
-    try {
-      if (isFavorited) {
-        await removeFavorite.mutateAsync(repeaterId);
-        toast.success("Removed from favorites");
-      } else {
-        await addFavorite.mutateAsync(repeaterId);
-        toast.success("Added to favorites");
-      }
-    } catch (err: any) {
-      toast.error(err?.message || "Failed to update favorites");
-    }
-  };
-
-  if (!identity) return null;
-
   const button = (
-    <button
-      onClick={handleToggle}
-      disabled={disabled || isLoading}
-      className={`flex items-center gap-1.5 px-3 py-1.5 rounded text-sm font-medium transition-all ${
+    <Button
+      variant="ghost"
+      size="icon"
+      className={`h-7 w-7 transition-colors ${
         disabled
-          ? "opacity-40 cursor-not-allowed text-muted-foreground"
-          : isFavorited
-          ? "bg-amber text-navy hover:bg-amber-dark"
-          : "border border-amber text-amber hover:bg-amber hover:text-navy"
+          ? 'opacity-30 cursor-not-allowed'
+          : isFavorite
+          ? 'text-amber-400 hover:text-amber-300'
+          : 'text-muted-foreground hover:text-amber-400'
       }`}
+      onClick={disabled ? undefined : onClick}
+      disabled={pending || disabled}
+      aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
     >
       <Star
-        className={`w-4 h-4 ${isFavorited && !disabled ? "fill-current" : ""}`}
+        className={`w-4 h-4 ${isFavorite ? 'fill-amber-400' : ''}`}
       />
-      {isLoading ? "..." : isFavorited ? "Favorited" : "Favorite"}
-    </button>
+    </Button>
   );
 
-  if (disabled) {
+  if (disabled && disabledReason) {
     return (
       <TooltipProvider>
         <Tooltip>
-          <TooltipTrigger asChild>
-            <span>{button}</span>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{disabledReason}</p>
+          <TooltipTrigger asChild>{button}</TooltipTrigger>
+          <TooltipContent className="bg-navy-800 border-navy-600 text-foreground text-xs max-w-[200px]">
+            {disabledReason}
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>

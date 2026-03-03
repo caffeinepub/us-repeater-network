@@ -1,81 +1,118 @@
-import React, { useState } from "react";
-import { Star, Radio, LogIn } from "lucide-react";
-import { useInternetIdentity } from "../hooks/useInternetIdentity";
-import { useGetFavorites } from "../hooks/useQueries";
-import type { Repeater } from "../backend";
-import RepeaterCard, { type DisplayRepeater } from "../components/RepeaterCard";
-import RepeaterDetailModal from "../components/RepeaterDetailModal";
-import { Button } from "@/components/ui/button";
-import { Link } from "@tanstack/react-router";
+import React, { useState } from 'react';
+import { Star, Radio } from 'lucide-react';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import { useGetFavorites, useAddFavorite, useRemoveFavorite } from '../hooks/useQueries';
+import RepeaterCard from '../components/RepeaterCard';
+import RepeaterDetailModal from '../components/RepeaterDetailModal';
+import type { Repeater } from '../backend';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Link } from '@tanstack/react-router';
 
 export default function FavoritesPage() {
   const { identity, login } = useInternetIdentity();
-  const principalStr = identity?.getPrincipal().toString() ?? null;
-  const { data: favorites = [], isLoading } = useGetFavorites(principalStr);
-  const [selectedRepeater, setSelectedRepeater] = useState<DisplayRepeater | null>(null);
+  // Convert null → undefined to match useGetFavorites(string | undefined) signature
+  const userPrincipal = identity?.getPrincipal().toString() ?? undefined;
+
+  const [selectedRepeater, setSelectedRepeater] = useState<Repeater | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+
+  const { data: favorites, isLoading } = useGetFavorites(userPrincipal);
+  const addFavorite = useAddFavorite();
+  const removeFavorite = useRemoveFavorite();
+
+  const favoriteIds = new Set((favorites ?? []).map((r) => r.id.toString()));
+
+  const handleFavoriteToggle = (id: bigint, isFav: boolean) => {
+    if (!userPrincipal) return;
+    if (isFav) {
+      removeFavorite.mutate(id);
+    } else {
+      addFavorite.mutate(id);
+    }
+  };
+
+  const handleCardClick = (repeater: Repeater) => {
+    setSelectedRepeater(repeater);
+    setModalOpen(true);
+  };
 
   if (!identity) {
     return (
       <div className="max-w-2xl mx-auto px-4 py-16 text-center">
-        <Star className="w-16 h-16 text-amber mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-foreground font-display mb-3">My Favorites</h1>
+        <Star className="w-16 h-16 text-amber-500 mx-auto mb-4 opacity-50" />
+        <h1 className="text-2xl font-bold text-foreground font-display mb-3">
+          Login Required
+        </h1>
         <p className="text-muted-foreground mb-6">
-          Log in to save and view your favorite repeaters.
+          You need to be logged in to view your favorite repeaters.
         </p>
-        <Button onClick={login} className="bg-amber text-navy hover:bg-amber-dark font-bold">
-          <LogIn className="w-4 h-4 mr-2" />
-          Login
+        <Button onClick={login} className="font-bold">
+          Login to View Favorites
         </Button>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-foreground font-display mb-2 flex items-center gap-3">
-          <Star className="w-7 h-7 text-amber fill-amber" />
-          My Favorites
-        </h1>
-        <p className="text-muted-foreground">Your saved local repeaters.</p>
-      </div>
-
-      {isLoading ? (
-        <div className="flex items-center justify-center py-20">
-          <Radio className="w-8 h-8 text-amber animate-pulse" />
-        </div>
-      ) : favorites.length === 0 ? (
-        <div className="text-center py-20">
-          <Star className="w-12 h-12 text-muted-foreground/40 mx-auto mb-4" />
-          <p className="text-lg font-semibold text-foreground mb-2">No favorites yet</p>
-          <p className="text-muted-foreground text-sm mb-6">
-            Browse the directory and click the star on local repeaters to save them here.
+    <main className="min-h-screen bg-background">
+      <section className="border-b border-border py-8 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center gap-3 mb-2">
+            <Star className="w-6 h-6 text-amber-500" />
+            <h1 className="text-2xl font-display font-bold text-foreground">My Favorites</h1>
+          </div>
+          <p className="text-muted-foreground text-sm ml-9">
+            Your saved repeaters for quick access.
           </p>
-          <Button asChild className="bg-amber text-navy hover:bg-amber-dark font-bold">
-            <Link to="/directory">Browse Directory</Link>
-          </Button>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          {favorites.map((r) => (
-            <RepeaterCard
-              key={r.id.toString()}
-              repeater={r}
-              onClick={(rep) => {
-                setSelectedRepeater(rep);
-                setModalOpen(true);
-              }}
-            />
-          ))}
-        </div>
-      )}
+      </section>
+
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-44 rounded-xl" />
+            ))}
+          </div>
+        ) : !favorites || favorites.length === 0 ? (
+          <div className="text-center py-16">
+            <Star className="w-16 h-16 text-amber-500/30 mx-auto mb-4" />
+            <h2 className="text-xl font-display font-bold text-foreground mb-2">No Favorites Yet</h2>
+            <p className="text-muted-foreground text-sm mb-6">
+              Browse the directory and star repeaters to save them here.
+            </p>
+            <Link to="/directory">
+              <Button className="font-semibold gap-2">
+                <Radio className="w-4 h-4" />
+                Browse Directory
+              </Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {favorites.map((r) => (
+              <RepeaterCard
+                key={r.id.toString()}
+                repeater={r}
+                onClick={() => handleCardClick(r)}
+                isFavorite={favoriteIds.has(r.id.toString())}
+                onFavoriteToggle={handleFavoriteToggle}
+                favoritesDisabled={false}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       <RepeaterDetailModal
         repeater={selectedRepeater}
         open={modalOpen}
-        onClose={() => setModalOpen(false)}
+        onClose={() => {
+          setModalOpen(false);
+          setSelectedRepeater(null);
+        }}
       />
-    </div>
+    </main>
   );
 }

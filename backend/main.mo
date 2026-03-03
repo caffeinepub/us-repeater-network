@@ -1,27 +1,30 @@
-import Map "mo:core/Map";
 import Set "mo:core/Set";
-import Float "mo:core/Float";
+import Map "mo:core/Map";
 import Nat "mo:core/Nat";
 import Text "mo:core/Text";
 import Time "mo:core/Time";
+import Float "mo:core/Float";
 import Array "mo:core/Array";
+import Principal "mo:core/Principal";
+import Runtime "mo:core/Runtime";
+import Iter "mo:core/Iter";
 import Int "mo:core/Int";
 import Order "mo:core/Order";
-import Iter "mo:core/Iter";
-import List "mo:core/List";
-import Runtime "mo:core/Runtime";
-import Principal "mo:core/Principal";
+import Migration "migration";
+
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
+import OutCall "http-outcalls/outcall";
 
+(with migration = Migration.run)
 actor {
-  let seedArray = List.empty<Repeater>();
+  // State to store the admin principal persistently
+  var adminPrincipal : ?Principal = null;
 
   // Initialize the access control system for role-based access
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
-  // Types
   type Latitude = Float;
   type Longitude = Float;
   type HaversineDistance = Float;
@@ -118,7 +121,7 @@ actor {
     longitude : Longitude;
   };
 
-  // Sample zip codes with geographic coordinates for the 5 states
+  // Sample zip codes with geographic coordinates for the 50 states
   let zipCoordinates : [(ZipCode, ZipCoordinate)] = [
     ("90001", { latitude = 33.9731; longitude = -118.2479 }),
     ("90210", { latitude = 34.0902; longitude = -118.4068 }),
@@ -162,492 +165,74 @@ actor {
   ];
 
   // State
-  var nextRepeaterId = 1;
+  var nextRepeaterId = 2;
+  let repeaters = Map.empty<Nat, Repeater>();
 
-  seedArray.add(
-    (
-      {
-        id = 1;
-        frequency = 146.940;
-        offset = -0.6;
-        callSign = "K6HOG";
-        sponsor = "Hogs Radio Club";
-        city = "Los Angeles";
-        state = "CA";
-        zipCode = "90001";
-        ctcssTone = "123.0";
-        dcsCode = "N/A";
-        toneMode = "FM";
-        coverageDescription = "Covers downtown LA and surrounding areas";
-        operationalNotes = "Excellent coverage, no known issues";
-        autopatchInfo = "No autopatch";
-        linkInfo = "Linked to 70cm network";
-        status = #active;
-        submissionStatus = #approved;
-        submittedBy = "Admin";
-        timestamp = Time.now();
-      },
-    )
-  );
-
-  seedArray.add(
-    (
-      {
-        id = 2;
-        frequency = 147.000;
-        offset = +0.6;
-        callSign = "N7STN";
-        sponsor = "Stanton ARC";
-        city = "Sacramento";
-        state = "CA";
-        zipCode = "95814";
-        ctcssTone = "131.8";
-        dcsCode = "N/A";
-        toneMode = "FM";
-        coverageDescription = "Sacramento citywide coverage";
-        operationalNotes = "Strong signal, occasional interference";
-        autopatchInfo = "Autopatch enabled";
-        linkInfo = "Part of NORCAL network";
-        status = #active;
-        submissionStatus = #approved;
-        submittedBy = "Admin";
-        timestamp = Time.now();
-      },
-    )
-  );
-
-  seedArray.add(
-    (
-      {
-        id = 3;
-        frequency = 444.100;
-        offset = +5.0;
-        callSign = "KN6DFL";
-        sponsor = "Lakeside Amateur Radio Club";
-        city = "San Diego";
-        state = "CA";
-        zipCode = "92101";
-        ctcssTone = "88.5";
-        dcsCode = "N/A";
-        toneMode = "FM/Digital";
-        coverageDescription = "Downtown San Diego and beach areas";
-        operationalNotes = "Good for mobile operators";
-        autopatchInfo = "No autopatch";
-        linkInfo = "None";
-        status = #active;
-        submissionStatus = #approved;
-        submittedBy = "Admin";
-        timestamp = Time.now();
-      },
-    )
-  );
-
-  seedArray.add(
-    (
-      {
-        id = 4;
-        frequency = 146.960;
-        offset = -0.6;
-        callSign = "WB5TTV";
-        sponsor = "Houston Metropolitan ARC";
-        city = "Houston";
-        state = "TX";
-        zipCode = "77001";
-        ctcssTone = "156.7";
-        dcsCode = "N/A";
-        toneMode = "FM";
-        coverageDescription = "Covers inner city Houston";
-        operationalNotes = "No autopatch";
-        autopatchInfo = "Not available";
-        linkInfo = "Linked to 70cm";
-        status = #active;
-        submissionStatus = #approved;
-        submittedBy = "Admin";
-        timestamp = Time.now();
-      },
-    )
-  );
-
-  seedArray.add(
-    (
-      {
-        id = 5;
-        frequency = 444.775;
-        offset = +5.0;
-        callSign = "N5MTK";
-        sponsor = "Houston Repeater Club";
-        city = "Houston";
-        state = "TX";
-        zipCode = "77001";
-        ctcssTone = "None";
-        dcsCode = "235";
-        toneMode = "Digital";
-        coverageDescription = "Good city coverage; not for mobile use";
-        operationalNotes = "Digital repeater, advanced users";
-        autopatchInfo = "None";
-        linkInfo = "Part of Metroplex network";
-        status = #active;
-        submissionStatus = #approved;
-        submittedBy = "Admin";
-        timestamp = Time.now();
-      },
-    )
-  );
-
-  seedArray.add(
-    (
-      {
-        id = 6;
-        frequency = 146.790;
-        offset = -0.6;
-        callSign = "W4HJL";
-        sponsor = "Orlando Amateur Radio Club";
-        city = "Orlando";
-        state = "FL";
-        zipCode = "32801";
-        ctcssTone = "103.5";
-        dcsCode = "N/A";
-        toneMode = "FM";
-        coverageDescription = "Orlando city center";
-        operationalNotes = "No autopatch, linked to 70cm";
-        autopatchInfo = "Not available";
-        linkInfo = "Linked to 444.900";
-        status = #active;
-        submissionStatus = #approved;
-        submittedBy = "Admin";
-        timestamp = Time.now();
-      },
-    )
-  );
-
-  seedArray.add(
-    (
-      {
-        id = 7;
-        frequency = 444.900;
-        offset = +5.0;
-        callSign = "W5KVE";
-        sponsor = "Dallas Metro Emergency Comm";
-        city = "Dallas";
-        state = "TX";
-        zipCode = "75201";
-        ctcssTone = "146.2";
-        dcsCode = "N/A";
-        toneMode = "FM";
-        coverageDescription = "Downtown Dallas";
-        operationalNotes = "No autopatch, weather alerts";
-        autopatchInfo = "Not available";
-        linkInfo = "No links";
-        status = #active;
-        submissionStatus = #approved;
-        submittedBy = "Admin";
-        timestamp = Time.now();
-      },
-    )
-  );
-
-  seedArray.add(
-    (
-      {
-        id = 8;
-        frequency = 147.180;
-        offset = +0.6;
-        callSign = "N7NFS";
-        sponsor = "Naperville Repeater Association";
-        city = "Naperville";
-        state = "IL";
-        zipCode = "60540";
-        ctcssTone = "100.0";
-        dcsCode = "N/A";
-        toneMode = "FM";
-        coverageDescription = "Naperville and west Chicago suburbs";
-        operationalNotes = "No autopatch available";
-        autopatchInfo = "Not available";
-        linkInfo = "Not linked";
-        status = #active;
-        submissionStatus = #approved;
-        submittedBy = "Admin";
-        timestamp = Time.now();
-      },
-    )
-  );
-
-  seedArray.add(
-    (
-      {
-        id = 9;
-        frequency = 444.375;
-        offset = +5.0;
-        callSign = "K2NEW";
-        sponsor = "New York Metropolitan Amateur Radio Club";
-        city = "New York";
-        state = "NY";
-        zipCode = "10001";
-        ctcssTone = "136.5";
-        dcsCode = "N/A";
-        toneMode = "Digital";
-        coverageDescription = "New York citywide coverage";
-        operationalNotes = "Digital repeater, not mobile compatible";
-        autopatchInfo = "None";
-        linkInfo = "None";
-        status = #active;
-        submissionStatus = #approved;
-        submittedBy = "Admin";
-        timestamp = Time.now();
-      },
-    )
-  );
-
-  seedArray.add(
-    (
-      {
-        id = 10;
-        frequency = 146.835;
-        offset = -0.6;
-        callSign = "W2JV";
-        sponsor = "New York City Amateur Radio Club";
-        city = "New York";
-        state = "NY";
-        zipCode = "10001";
-        ctcssTone = "173.8";
-        dcsCode = "N/A";
-        toneMode = "FM";
-        coverageDescription = "Manhattan and Brooklyn";
-        operationalNotes = "No autopatch, weather alerts";
-        autopatchInfo = "Not available";
-        linkInfo = "No links";
-        status = #active;
-        submissionStatus = #approved;
-        submittedBy = "Admin";
-        timestamp = Time.now();
-      },
-    )
-  );
-
-  seedArray.add(
-    (
-      {
-        id = 11;
-        frequency = 444.825;
-        offset = +5.0;
-        callSign = "K5TDK";
-        sponsor = "TX Metropolitan ARC";
-        city = "Austin";
-        state = "TX";
-        zipCode = "78701";
-        ctcssTone = "144.4";
-        dcsCode = "N/A";
-        toneMode = "FM/Digital";
-        coverageDescription = "Austin citywide coverage";
-        operationalNotes = "Linked to 146.88 repeater";
-        autopatchInfo = "Not available";
-        linkInfo = "Linked to area repeaters";
-        status = #active;
-        submissionStatus = #approved;
-        submittedBy = "Admin";
-        timestamp = Time.now();
-      },
-    )
-  );
-
-  seedArray.add(
-    (
-      {
-        id = 12;
-        frequency = 146.970;
-        offset = -0.6;
-        callSign = "K2NJS";
-        sponsor = "NJ Society of Ham Radio";
-        city = "Newark";
-        state = "NJ";
-        zipCode = "07101";
-        ctcssTone = "146.2";
-        dcsCode = "N/A";
-        toneMode = "FM";
-        coverageDescription = "Newark city center";
-        operationalNotes = "No autopatch";
-        autopatchInfo = "Not available";
-        linkInfo = "Not linked";
-        status = #active;
-        submissionStatus = #approved;
-        submittedBy = "Admin";
-        timestamp = Time.now();
-      },
-    )
-  );
-
-  seedArray.add(
-    (
-      {
-        id = 13;
-        frequency = 444.300;
-        offset = +5.0;
-        callSign = "K4ORY";
-        sponsor = "Lake County Amateur Radio Association";
-        city = "Leesburg";
-        state = "FL";
-        zipCode = "34748";
-        ctcssTone = "91.5";
-        dcsCode = "N/A";
-        toneMode = "FM/Digital";
-        coverageDescription = "Lake County, FL";
-        operationalNotes = "No autopatch, weather alerts";
-        autopatchInfo = "Not available";
-        linkInfo = "Not linked";
-        status = #active;
-        submissionStatus = #approved;
-        submittedBy = "Admin";
-        timestamp = Time.now();
-      },
-    )
-  );
-
-  seedArray.add(
-    (
-      {
-        id = 14;
-        frequency = 146.730;
-        offset = -0.6;
-        callSign = "W5WWG";
-        sponsor = "Northwest MS ARC";
-        city = "Southaven";
-        state = "MS";
-        zipCode = "38671";
-        ctcssTone = "118.8";
-        dcsCode = "N/A";
-        toneMode = "FM";
-        coverageDescription = "NW Mississippi, Memphis area";
-        operationalNotes = "No autopatch, severe weather spotters";
-        autopatchInfo = "Not available";
-        linkInfo = "Weather spotter network";
-        status = #active;
-        submissionStatus = #approved;
-        submittedBy = "Admin";
-        timestamp = Time.now();
-      },
-    )
-  );
-
-  seedArray.add(
-    (
-      {
-        id = 15;
-        frequency = 444.200;
-        offset = +5.0;
-        callSign = "CO4BTA";
-        sponsor = "Colorado Over The Air Club";
-        city = "Denver";
-        state = "CO";
-        zipCode = "80202";
-        ctcssTone = "114.8";
-        dcsCode = "N/A";
-        toneMode = "FM/Digital";
-        coverageDescription = "Denver metro area";
-        operationalNotes = "Excellent coverage";
-        autopatchInfo = "Autopatch supported";
-        linkInfo = "Linked to 146.91 repeater";
-        status = #active;
-        submissionStatus = #approved;
-        submittedBy = "Admin";
-        timestamp = Time.now();
-      },
-    )
-  );
-
-  seedArray.add(
-    (
-      {
-        id = 16;
-        frequency = 146.940;
-        offset = -0.6;
-        callSign = "WN4HVC";
-        sponsor = "Nashville Metro Radio";
-        city = "Nashville";
-        state = "TN";
-        zipCode = "37203";
-        ctcssTone = "100.0";
-        dcsCode = "N/A";
-        toneMode = "FM";
-        coverageDescription = "Nashville city center";
-        operationalNotes = "No autopatch available";
-        autopatchInfo = "Not available";
-        linkInfo = "Not linked";
-        status = #active;
-        submissionStatus = #approved;
-        submittedBy = "Admin";
-        timestamp = Time.now();
-      },
-    )
-  );
-
-  seedArray.add(
-    (
-      {
-        id = 17;
-        frequency = 444.800;
-        offset = +5.0;
-        callSign = "K7JPA";
-        sponsor = "Seattle Metro Repeater Group";
-        city = "Seattle";
-        state = "WA";
-        zipCode = "98101";
-        ctcssTone = "141.3";
-        dcsCode = "N/A";
-        toneMode = "FM/Digital";
-        coverageDescription = "Seattle downtown and waterfront";
-        operationalNotes = "No known issues";
-        autopatchInfo = "Autopatch on weekends only";
-        linkInfo = "Weather spotter network";
-        status = #active;
-        submissionStatus = #approved;
-        submittedBy = "Admin";
-        timestamp = Time.now();
-      },
-    )
-  );
-
-  seedArray.add(
-    (
-      {
-        id = 18;
-        frequency = 146.970;
-        offset = -0.6;
-        callSign = "K2NYC";
-        sponsor = "NYC Repeater Network";
-        city = "New York";
-        state = "NY";
-        zipCode = "10001";
-        ctcssTone = "88.5";
-        dcsCode = "N/A";
-        toneMode = "FM";
-        coverageDescription = "Manhattan citywide";
-        operationalNotes = "Occasional location updates";
-        autopatchInfo = "Not available";
-        linkInfo = "Not linked";
-        status = #active;
-        submissionStatus = #approved;
-        submittedBy = "Admin";
-        timestamp = Time.now();
-      },
-    )
-  );
-
-  // Stores repeaters in persistent Map
-  let repeaters = Map.fromIter<Nat, Repeater>(
-    seedArray.values().map(
-      func(repeater) {
-        (repeater.id, repeater);
-      }
-    )
-  );
-
-  // Stores user profiles
   let userProfiles = Map.empty<Principal, UserProfile>();
-
-  // Stores favorites with persistent Map
   let favorites = Map.empty<FavoriteId, Set.Set<RepeaterId>>();
 
-  // User profile functions required by the frontend
+  let hardcodedRepeater : Repeater = {
+    id = 1;
+    frequency = 146.940;
+    offset = -0.6;
+    callSign = "K6HOG";
+    sponsor = "Hogs Radio Club";
+    city = "Los Angeles";
+    state = "CA";
+    zipCode = "90001";
+    ctcssTone = "123.0";
+    dcsCode = "N/A";
+    toneMode = "FM";
+    coverageDescription = "Covers downtown LA and surrounding areas";
+    operationalNotes = "Excellent coverage, no known issues";
+    autopatchInfo = "No autopatch";
+    linkInfo = "Linked to 70cm network";
+    status = #active;
+    submissionStatus = #approved;
+    submittedBy = "Admin";
+    timestamp = Time.now();
+  };
+  repeaters.add(1, hardcodedRepeater);
+
+  // ADMIN SETUP
+  public shared ({ caller }) func registerAdmin(passphrase : Text) : async () {
+    if (caller.isAnonymous()) {
+      Runtime.trap("Anonymous principals cannot register as admin");
+    };
+    if (passphrase != "adminPassphrase") {
+      Runtime.trap("Invalid admin passphrase");
+    };
+    switch (adminPrincipal) {
+      case (null) {
+        adminPrincipal := ?caller;
+        AccessControl.initialize(
+          accessControlState,
+          caller,
+          "adminPassphrase",
+          passphrase,
+        );
+      };
+      case (?_) { Runtime.trap("Admin already registered") };
+    };
+  };
+
+  func assertAdminAccess(caller : Principal) {
+    switch (adminPrincipal) {
+      case (?admin) {
+        if (caller != admin) {
+          Runtime.trap(
+            "Unauthorized: Only admins can perform this action. You must login with your admin Internet Identity (II) credential which requires a security passphrase. If you are not the project owner or in development mode, you must call registerAdmin with the admin secret passphrase from the admin Internet Identity (II) credential."
+          );
+        };
+      };
+      case (null) {
+        Runtime.trap(
+          "No admin registered. Check if the admin has run registerAdmin/(create superuser) first."
+        );
+      };
+    };
+  };
+
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can view their profile");
@@ -669,7 +254,6 @@ actor {
     userProfiles.add(caller, profile);
   };
 
-  // Add repeater (creates with pending status)
   public shared ({ caller }) func addRepeater(data : NewRepeater) : async Repeater {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can add repeaters. Sorry! Double check if you are logged in to HamRepeaters.ai");
@@ -701,14 +285,42 @@ actor {
     repeater;
   };
 
-  // Admin only: Approve/reject repeater
-  public shared ({ caller }) func approveRepeater(repeaterId : Nat, passphrase : Text, approve : Bool) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can approve repeaters");
+  public shared ({ caller }) func bulkAddRepeaters(newRepeaters : [Repeater]) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can bulk import repeaters");
     };
-    if (passphrase != "adminPassphrase") {
-      Runtime.trap("Invalid admin passphrase");
+
+    for (repeater in newRepeaters.values()) {
+      let sanitized : Repeater = {
+        id = repeater.id;
+        frequency = repeater.frequency;
+        offset = repeater.offset;
+        callSign = repeater.callSign;
+        sponsor = repeater.sponsor;
+        city = repeater.city;
+        state = repeater.state;
+        zipCode = repeater.zipCode;
+        ctcssTone = repeater.ctcssTone;
+        dcsCode = repeater.dcsCode;
+        toneMode = repeater.toneMode;
+        coverageDescription = repeater.coverageDescription;
+        operationalNotes = repeater.operationalNotes;
+        autopatchInfo = repeater.autopatchInfo;
+        linkInfo = repeater.linkInfo;
+        status = repeater.status;
+        submissionStatus = #pending;
+        submittedBy = repeater.submittedBy;
+        timestamp = repeater.timestamp;
+      };
+      repeaters.add(sanitized.id, sanitized);
+      if (sanitized.id >= nextRepeaterId) {
+        nextRepeaterId := sanitized.id + 1;
+      };
     };
+  };
+
+  public shared ({ caller }) func approveRepeater(repeaterId : Nat, approve : Bool) : async () {
+    assertAdminAccess(caller);
 
     let repeater = switch (repeaters.get(repeaterId)) {
       case (null) { Runtime.trap("Repeater not found") };
@@ -740,7 +352,6 @@ actor {
     repeaters.add(repeaterId, updatedRepeater);
   };
 
-  // Get approved repeaters - public, no auth required
   public query func getApprovedRepeaters() : async [Repeater] {
     repeaters.values().toArray().filter(
       func(repeater) {
@@ -749,11 +360,8 @@ actor {
     );
   };
 
-  // Get pending repeaters (admin only)
   public query ({ caller }) func getPendingRepeaters() : async [Repeater] {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can view pending repeaters");
-    };
+    assertAdminAccess(caller);
     repeaters.values().toArray().filter(
       func(repeater) {
         repeater.submissionStatus == #pending;
@@ -761,14 +369,8 @@ actor {
     );
   };
 
-  // Update repeater (admin only)
-  public shared ({ caller }) func updateRepeater(repeaterId : Nat, passphrase : Text, data : UpdateRepeaterData) : async Repeater {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can update repeaters");
-    };
-    if (passphrase != "adminPassphrase") {
-      Runtime.trap("Invalid admin passphrase");
-    };
+  public shared ({ caller }) func updateRepeater(repeaterId : Nat, data : UpdateRepeaterData) : async Repeater {
+    assertAdminAccess(caller);
 
     let existingRepeater = switch (repeaters.get(repeaterId)) {
       case (null) { Runtime.trap("Repeater not found") };
@@ -846,14 +448,8 @@ actor {
     updatedRepeater;
   };
 
-  // Delete repeater (admin only)
-  public shared ({ caller }) func deleteRepeater(repeaterId : Nat, passphrase : Text) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
-      Runtime.trap("Unauthorized: Only admins can delete repeaters");
-    };
-    if (passphrase != "adminPassphrase") {
-      Runtime.trap("Invalid admin passphrase");
-    };
+  public shared ({ caller }) func deleteRepeater(repeaterId : Nat) : async () {
+    assertAdminAccess(caller);
 
     switch (repeaters.get(repeaterId)) {
       case (null) { Runtime.trap("Repeater not found") };
@@ -863,7 +459,6 @@ actor {
     };
   };
 
-  // Zip code proximity filtering using Haversine formula - public, no auth required
   public query func searchByZipCode(zipCode : Text, radius : Miles) : async [Repeater] {
     if (radius == 0) { return [] };
     let userCoordsOpt = findZipCoords(zipCode);
@@ -921,7 +516,6 @@ actor {
     deg * Float.pi / 180.0;
   };
 
-  // Favorites system - requires authenticated user
   public shared ({ caller }) func addFavorite(repeaterId : Nat) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only authenticated users can add favorites");
@@ -1021,5 +615,70 @@ actor {
         repeater.city == city
       }
     );
+  };
+
+  public query ({ caller }) func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
+    OutCall.transform(input);
+  };
+
+  public shared ({ caller }) func fetchAllRepeaterBookRepeaters() : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can fetch repeaters from RepeaterBook");
+    };
+    let url = "https://api.repeaterbook.com/v1/repeaters";
+    await OutCall.httpGetRequest(url, [], transform);
+  };
+
+  public shared ({ caller }) func fetchRepeatersByStateFromRepeaterBook(stateAbbreviation : Text) : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can fetch repeaters from RepeaterBook");
+    };
+    let url = "https://api.repeaterbook.com/v1/repeaters?state=" # stateAbbreviation;
+    await OutCall.httpGetRequest(url, [], transform);
+  };
+
+  public shared ({ caller }) func fetchRepeatersByCountyFromRepeaterBook(stateAbbreviation : Text, county : Text) : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can fetch repeaters from RepeaterBook");
+    };
+    let url = "https://api.repeaterbook.com/v1/repeaters?state=" # stateAbbreviation # "&county=" # replaceSpacesWithPercentTwenty(county);
+    await OutCall.httpGetRequest(url, [], transform);
+  };
+
+  public shared ({ caller }) func fetchRepeatersByCityFromRepeaterBook(stateAbbreviation : Text, city : Text) : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can fetch repeaters from RepeaterBook");
+    };
+    let url = "https://api.repeaterbook.com/v1/repeaters?state=" # stateAbbreviation # "&city=" # replaceSpacesWithPercentTwenty(city);
+    await OutCall.httpGetRequest(url, [], transform);
+  };
+
+  public shared ({ caller }) func fetchRepeatersByZipFromRepeaterBook(zipCode : Text) : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can fetch repeaters from RepeaterBook");
+    };
+    let url = "https://api.repeaterbook.com/v1/repeaters?zip=" # zipCode;
+    await OutCall.httpGetRequest(url, [], transform);
+  };
+
+  public shared ({ caller }) func fetchRepeatersWithinRadiusFromRepeaterBook(zipCode : Text, radius : Nat) : async Text {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only authenticated users can fetch repeaters from RepeaterBook");
+    };
+    let url = "https://api.repeaterbook.com/v1/repeaters?zip=" # zipCode # "&radius=" # radius.toText();
+    await OutCall.httpGetRequest(url, [], transform);
+  };
+
+  func replaceSpacesWithPercentTwenty(text : Text) : Text {
+    let textStr = text.toVarArray();
+    let resultStr = textStr.map(
+      func(c) {
+        if (c == ' ') { '%' } else { c };
+      }
+    );
+    let percentTwentyStr = "%20".toVarArray();
+
+    let tempStr = resultStr.concat(percentTwentyStr);
+    Text.fromVarArray(tempStr);
   };
 };

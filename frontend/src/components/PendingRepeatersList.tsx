@@ -9,16 +9,16 @@ import { toast } from 'sonner';
 interface PendingRepeatersListProps {
   repeaters: Repeater[];
   isLoading: boolean;
-  passphrase: string;
+  passphrase?: string;
 }
 
-function PendingCard({ repeater, passphrase }: { repeater: Repeater; passphrase: string }) {
+function PendingCard({ repeater }: { repeater: Repeater }) {
   const { mutateAsync: approveRepeater, isPending } = useApproveRepeater();
   const offsetStr = repeater.offset >= 0 ? `+${repeater.offset.toFixed(1)}` : repeater.offset.toFixed(1);
 
   const handleAction = async (approve: boolean) => {
     try {
-      await approveRepeater({ repeaterId: repeater.id, passphrase, approve });
+      await approveRepeater({ repeaterId: repeater.id, approve });
       toast.success(approve ? `${repeater.callSign} approved and published!` : `${repeater.callSign} rejected.`);
     } catch (err: unknown) {
       const error = err as Error;
@@ -31,12 +31,12 @@ function PendingCard({ repeater, passphrase }: { repeater: Repeater; passphrase:
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <div className="w-10 h-10 rounded-lg bg-amber/10 border border-amber/20 flex items-center justify-center flex-shrink-0">
-            <Radio className="w-5 h-5 text-amber-DEFAULT" />
+            <Radio className="w-5 h-5 text-amber" />
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
               <span className="font-mono font-bold text-primary text-base tracking-wider">{repeater.callSign}</span>
-              <Badge variant="outline" className="text-xs font-mono border-amber/40 text-amber-DEFAULT bg-amber/10">
+              <Badge variant="outline" className="text-xs font-mono border-amber/40 text-amber bg-amber/10">
                 <Clock className="w-3 h-3 mr-1" />
                 PENDING
               </Badge>
@@ -108,7 +108,7 @@ function PendingCard({ repeater, passphrase }: { repeater: Repeater; passphrase:
   );
 }
 
-export default function PendingRepeatersList({ repeaters, isLoading, passphrase }: PendingRepeatersListProps) {
+export default function PendingRepeatersList({ repeaters, isLoading }: PendingRepeatersListProps) {
   if (isLoading) {
     return (
       <div className="space-y-3">
@@ -141,7 +141,7 @@ export default function PendingRepeatersList({ repeaters, isLoading, passphrase 
   return (
     <div className="space-y-3">
       {repeaters.map((r) => (
-        <PendingCard key={r.id.toString()} repeater={r} passphrase={passphrase} />
+        <PendingCard key={r.id.toString()} repeater={r} />
       ))}
     </div>
   );

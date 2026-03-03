@@ -1,29 +1,65 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-24T16:15:13.199Z",
-  "summary": "All four requirements (REQ-16 through REQ-19) are substantially implemented in the diff. The repeaterBookApi.ts service module, DirectoryPage updates, RepeaterDetailModal changes, and the informational banner are all present. Minor details around city-triggered fetching behavior and banner placement are slightly ambiguous due to truncation, but evidence strongly supports full implementation.",
-  "missing_requirements": [],
-  "hallucinated_features": [],
-  "confidence": 0.92,
+  "generatedAt": "2026-03-02T13:27:32.766Z",
+  "summary": "The diff implements most of the requested requirements: a bulkAddRepeaters frontend mutation hook, updated CHIRP CSV parser, batched AdminPage imports with progress, improved DirectoryPage with infinite scroll and full-dataset filtering, and Internet Identity auth gates. However, the critical REQ-1 backend bulkAddRepeaters function in main.mo is not confirmed implemented, and REQ-1's stable storage guarantee is unclear from the truncated diff.",
+  "missing_requirements": [
+    {
+      "id": "REQ-1",
+      "requirement": "Add or update a `bulkAddRepeaters` function in the main actor (backend/main.mo) that accepts an array of Repeater records and stores all of them persistently in a stable data structure.",
+      "reason": "The diff shows backend/main.mo was modified but its content is heavily truncated. No bulkAddRepeaters function signature or implementation is visible in the diff. The frontend hook useBulkAddRepeaters calls actor.bulkAddRepeaters, implying it must exist, but the actual backend implementation cannot be confirmed from the available evidence.",
+      "evidence": [
+        "backend/main.mo",
+        "frontend/src/hooks/useQueries.ts"
+      ]
+    },
+    {
+      "id": "REQ-1",
+      "requirement": "No records are lost between canister upgrades (stable storage used).",
+      "reason": "The migration.mo file is added but shows OldActor and NewActor with identical structures, and main.mo is truncated. Whether stable variables or stable storage patterns are used for the expanded repeater store cannot be confirmed from the diff.",
+      "evidence": [
+        "backend/main.mo",
+        "backend/migration.mo"
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "requirement": "Non-admin authenticated users cannot trigger bulk imports.",
+      "reason": "AdminPage.tsx is truncated and shows an AdminPassphraseGate wrapper, but the diff does not clearly show that a non-admin authenticated user is blocked from triggering the import at the backend level. Backend-side enforcement for bulkAddRepeaters requiring admin principal is unverifiable due to truncation.",
+      "evidence": [
+        "frontend/src/pages/AdminPage.tsx",
+        "backend/main.mo"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "A migration.mo module was added with an explicit OldActor/NewActor migration pattern even though no schema change is reflected — both types are identical.",
+      "reason": "The build request only requested bulkAddRepeaters and stable storage. It did not request a migration module or schema migration infrastructure. The migration.mo adds scaffolding not requested.",
+      "evidence": [
+        "backend/migration.mo"
+      ]
+    },
+    {
+      "description": "Per-state breakdown in the import completion summary.",
+      "reason": "REQ-3 completion summary requires total saved, total skipped, and error details only. A per-state breakdown is an additional feature added beyond the spec.",
+      "evidence": [
+        "frontend/src/pages/AdminPage.tsx"
+      ]
+    }
+  ],
+  "confidence": 0.62,
   "changed_files": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/App.tsx",
-    "frontend/src/components/FavoriteButton.tsx",
-    "frontend/src/components/Footer.tsx",
     "frontend/src/components/Header.tsx",
-    "frontend/src/components/RepeaterCard.tsx",
-    "frontend/src/components/RepeaterDetailModal.tsx",
     "frontend/src/hooks/useQueries.ts",
-    "frontend/src/index.css",
+    "frontend/src/pages/AdminDashboardPage.tsx",
     "frontend/src/pages/AdminPage.tsx",
     "frontend/src/pages/DirectoryPage.tsx",
     "frontend/src/pages/FavoritesPage.tsx",
-    "frontend/src/pages/HomePage.tsx",
-    "frontend/src/pages/ProfilePage.tsx",
-    "frontend/src/pages/SubmitPage.tsx",
-    "frontend/src/services/repeaterBookApi.ts",
-    "frontend/tailwind.config.js",
+    "frontend/src/utils/csvParser.ts",
     "project_state.json"
   ]
 }

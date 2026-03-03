@@ -1,104 +1,118 @@
 {
   "kind": "build_request",
-  "title": "RepeaterBook API Integration (Retry)",
+  "title": "Fix CHIRP CSV Import — Persist All 4000+ Repeaters to Canister",
   "projectName": "US Repeater Network",
-  "priority": "normal",
+  "priority": "high",
   "requirements": [
     {
-      "id": "REQ-16",
-      "text": "Create a frontend service/utility module at frontend/src/services/repeaterBookApi.ts that calls the RepeaterBook public API at https://www.repeaterbook.com/api/export.php. The module must support querying by state (using the 'state_id' parameter with 2-letter state abbreviation), by city (using the 'city' parameter), and optionally by frequency. It must parse the JSON response and map RepeaterBook fields (Frequency, Offset, Uplink Tone, Downlink Tone, TSQ, Call Sign, Nearest City, State, Use, Operational Status, etc.) into the app's internal Repeater shape so it is compatible with existing RepeaterCard and RepeaterDetailModal components. Mark these entries with a source field set to 'repeaterbook' to distinguish them from locally submitted repeaters.",
-      "target": "frontend",
+      "id": "REQ-1",
+      "text": "Expand the backend canister storage to support bulk insertion of 4,000+ repeaters in a single operation. Add or update a `bulkAddRepeaters` function in the main actor that accepts an array of Repeater records and stores all of them persistently in a stable data structure (e.g., TrieMap or HashMap keyed by a unique ID). Ensure no records are silently dropped or truncated during batch inserts.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-repeaterbook-integration"
+          "msg-4"
         ],
         "quotes": [
-          "Yes go ahead and build the Repeaterbook API integration",
-          "Yes give it another try"
+          "importing over 4000 repeaters and only 17 is showing"
         ]
       },
       "acceptanceCriteria": [
-        "Module exports a function (e.g., fetchRepeaterBookData) accepting state abbreviation, optional city, and optional frequency parameters",
-        "Function constructs correct query URL to https://www.repeaterbook.com/api/export.php with appropriate parameters",
-        "Response JSON is parsed and mapped to the app's internal Repeater shape",
-        "Returned objects include a source field set to 'repeaterbook'",
-        "Module handles network errors gracefully and returns an empty array on failure"
+        "A `bulkAddRepeaters` endpoint accepts an array of Repeater records and stores all of them.",
+        "After calling `bulkAddRepeaters` with 4,000+ records, querying the canister returns the full count.",
+        "No records are lost between canister upgrades (stable storage used).",
+        "The function is callable by authenticated users (Internet Identity principal)."
       ]
     },
     {
-      "id": "REQ-17",
-      "text": "Update the Directory Page (frontend/src/pages/DirectoryPage.tsx) to integrate the RepeaterBook API. When a user selects a state or enters a city in the filter bar, query the RepeaterBook API for live repeater data in addition to the locally stored repeaters. Display a loading indicator while fetching. Show RepeaterBook results in the same RepeaterCard grid alongside local results. Include a visible source badge or label on each card indicating whether the data is from 'RepeaterBook' (live) or 'Local' (user-submitted). Both sources must coexist — do not remove or hide existing local repeater display.",
+      "id": "REQ-2",
+      "text": "Update the CHIRP CSV parser (`frontend/src/utils/csvParser.ts`) to correctly map all CHIRP CSV columns — including Location, Name, Frequency, Duplex, Offset, Tone, rToneFreq, cToneFreq, DtcsCode, Mode, and Comment — into the backend Repeater type. Ensure CTCSS/PL tone fields are always normalized (e.g., '100.0' → 1000 or the appropriate integer representation the backend expects) and that city/state extraction handles all 50 US states reliably.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-repeaterbook-integration"
+          "msg-4",
+          "msg-6"
         ],
         "quotes": [
-          "Yes go ahead and build the Repeaterbook API integration",
-          "Yes give it another try"
+          "Repeaters via can through chirp",
+          "import a CHIRP CSV export file and have all the repeater data saved"
         ]
       },
       "acceptanceCriteria": [
-        "Selecting a state in the filter bar triggers a RepeaterBook API fetch for that state",
-        "Entering a city triggers a RepeaterBook API fetch for that city",
-        "A loading spinner or indicator is shown while the RepeaterBook API request is in-flight",
-        "RepeaterBook results render in the same RepeaterCard grid as local repeaters",
-        "Each card clearly displays a 'RepeaterBook' or 'Local' source badge",
-        "Local (user-submitted) repeaters continue to display alongside RepeaterBook results"
+        "A CHIRP CSV with 4,000+ rows produces 4,000+ parsed Repeater objects with no silent parse failures.",
+        "CTCSS/PL tone values are correctly normalized for all rows.",
+        "City and state fields are correctly extracted for all 50 US states.",
+        "Rows that cannot be parsed (missing required fields) are counted and reported as skipped without crashing the import."
       ]
     },
     {
-      "id": "REQ-18",
-      "text": "Ensure the RepeaterDetailModal (frontend/src/components/RepeaterDetailModal.tsx) works correctly for both local repeaters and RepeaterBook-sourced repeaters. For RepeaterBook entries that lack certain fields, display 'N/A' for missing values. Disable the favorite button for RepeaterBook entries and show a tooltip explaining that favoriting is only available for locally submitted repeaters.",
+      "id": "REQ-3",
+      "text": "Update the Admin CSV import page (`frontend/src/pages/AdminPage.tsx`) so that after parsing the CHIRP CSV file, all parsed repeaters are sent to the backend `bulkAddRepeaters` canister function in batches (e.g., 200 records per batch) with progress feedback shown to the user. After all batches complete, display the total number of repeaters successfully saved, the number skipped, and any error details.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-repeaterbook-integration"
+          "msg-6"
         ],
         "quotes": [
-          "Yes give it another try"
+          "allow users to upload the CSV file directly through the browser"
         ]
       },
       "acceptanceCriteria": [
-        "Opening the detail modal for a RepeaterBook entry renders all available fields correctly",
-        "Missing fields on RepeaterBook entries display 'N/A' instead of blank or undefined values",
-        "The favorite button is visually disabled for RepeaterBook entries",
-        "A tooltip on the disabled favorite button explains that favoriting is only available for locally submitted repeaters",
-        "The favorite button remains fully functional for local repeater entries"
+        "Uploading a CHIRP CSV with 4,000+ repeaters triggers batched canister writes.",
+        "A progress indicator (e.g., 'Saving batch 3 of 20...') is shown during the upload.",
+        "On completion, a summary shows total saved, total skipped, and any errors.",
+        "All 4,000+ repeaters appear in the directory page after a successful import."
       ]
     },
     {
-      "id": "REQ-19",
-      "text": "Add a prominent informational banner on the Directory Page (frontend/src/pages/DirectoryPage.tsx) stating that live ham radio repeater data is sourced from RepeaterBook.com, and that GMRS repeaters can be submitted manually via the submission form. Include a clickable link to https://www.repeaterbook.com that opens in a new tab. Style the banner consistent with the existing dark ham-radio theme using amber/orange accent colors.",
-      "target": "frontend",
+      "id": "REQ-4",
+      "text": "Ensure the repeater directory page (`frontend/src/pages/DirectoryPage.tsx`) correctly loads and displays all stored repeaters from the canister, including those imported via CSV. Fix any pagination, infinite scroll, or query limit issues that could cause only a subset (e.g., 17) of stored repeaters to be displayed. The page should show the full count and allow filtering/searching across all stored repeaters.",
+      "target": "both",
       "source": {
         "messageIds": [
-          "msg-repeaterbook-integration"
+          "msg-4"
         ],
         "quotes": [
-          "Yes give it another try"
+          "importing over 4000 repeaters and only 17 is showing"
         ]
       },
       "acceptanceCriteria": [
-        "An informational banner is displayed on the Directory Page above or below the filter bar",
-        "Banner text states that live ham radio data is sourced from RepeaterBook.com",
-        "Banner text states that GMRS repeaters can be submitted via the submission form",
-        "A link to https://www.repeaterbook.com is present and opens in a new tab",
-        "Banner styling matches the existing dark navy/charcoal ham-radio theme with amber/orange accents"
+        "The directory page loads all stored repeaters (not a hard-coded or small limit).",
+        "Infinite scroll or pagination loads subsequent pages until all records are accessible.",
+        "Search and filter (by state, mode, call sign) work across the full dataset.",
+        "The result count displayed matches the actual total stored in the canister."
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Require Internet Identity authentication to access the CSV import functionality. Users who are not logged in should see a login prompt instead of the import UI. Authenticated admins should be able to trigger bulk imports, while unauthenticated or non-admin users cannot.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-8"
+        ],
+        "quotes": [
+          "Internet Identity login required to save and manage repeaters"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Visiting the import/admin page without being logged in shows a login prompt.",
+        "After logging in with Internet Identity, the CSV upload UI is accessible.",
+        "Non-admin authenticated users cannot trigger bulk imports.",
+        "Admin users can upload and import CSV files successfully."
       ]
     }
   ],
   "constraints": [
-    "Do not modify files under frontend/src/hooks/ (useInternetIdentity.ts, useActor.ts) or frontend/src/main.tsx",
-    "Do not alter the existing backend Motoko actor or data model",
-    "Do not remove or break the existing local repeater display on the Directory Page",
-    "Admin passphrase must remain WendellAdmin2024"
+    "All repeater data must be stored in the backend canister (Internet Computer stable storage) — no external databases.",
+    "Do not modify files listed in frontend.immutablePaths.",
+    "Maintain single-actor Motoko architecture in backend/main.mo.",
+    "CHIRP CSV format compatibility must be preserved — do not break existing parse logic, only extend/fix it."
   ],
   "nonGoals": [
-    "MyGMRS.com API integration (no public API available)",
-    "Backend changes to store RepeaterBook data persistently",
-    "Bulk import or seeding of RepeaterBook data into the local database",
-    "Any real-time or WebSocket-based data syncing"
+    "Syncing or exporting data to external services (RepeaterBook, RadioReference, etc.).",
+    "Real-time collaboration or multi-user conflict resolution.",
+    "Mobile app or native CHIRP software integration.",
+    "Editing or deleting individual repeaters imported via CSV (beyond what already exists)."
   ],
   "imageRequirements": {
     "required": [],
