@@ -1,0 +1,89 @@
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&family=Inter:wght@300;400;500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Navy/Charcoal dark theme - ham radio aesthetic */
+    --background: oklch(0.14 0.015 240);
+    --foreground: oklch(0.92 0.01 240);
+
+    --card: oklch(0.18 0.018 240);
+    --card-foreground: oklch(0.92 0.01 240);
+
+    --popover: oklch(0.18 0.018 240);
+    --popover-foreground: oklch(0.92 0.01 240);
+
+    --primary: oklch(0.75 0.15 75);
+    --primary-foreground: oklch(0.14 0.015 240);
+
+    --secondary: oklch(0.22 0.02 240);
+    --secondary-foreground: oklch(0.85 0.01 240);
+
+    --muted: oklch(0.22 0.02 240);
+    --muted-foreground: oklch(0.6 0.02 240);
+
+    --accent: oklch(0.22 0.02 240);
+    --accent-foreground: oklch(0.85 0.01 240);
+
+    --destructive: oklch(0.55 0.22 25);
+    --destructive-foreground: oklch(0.95 0.01 25);
+
+    --border: oklch(0.28 0.02 240);
+    --input: oklch(0.22 0.02 240);
+    --ring: oklch(0.75 0.15 75);
+
+    --radius: 0.5rem;
+
+    /* Custom tokens */
+    --amber: oklch(0.75 0.15 75);
+    --amber-dark: oklch(0.65 0.15 75);
+    --navy: oklch(0.18 0.025 240);
+    --navy-light: oklch(0.22 0.02 240);
+    --navy-dark: oklch(0.12 0.015 240);
+    --teal: oklch(0.65 0.12 185);
+  }
+
+  .dark {
+    --background: oklch(0.14 0.015 240);
+    --foreground: oklch(0.92 0.01 240);
+    --card: oklch(0.18 0.018 240);
+    --card-foreground: oklch(0.92 0.01 240);
+    --popover: oklch(0.18 0.018 240);
+    --popover-foreground: oklch(0.92 0.01 240);
+    --primary: oklch(0.75 0.15 75);
+    --primary-foreground: oklch(0.14 0.015 240);
+    --secondary: oklch(0.22 0.02 240);
+    --secondary-foreground: oklch(0.85 0.01 240);
+    --muted: oklch(0.22 0.02 240);
+    --muted-foreground: oklch(0.6 0.02 240);
+    --accent: oklch(0.22 0.02 240);
+    --accent-foreground: oklch(0.85 0.01 240);
+    --destructive: oklch(0.55 0.22 25);
+    --destructive-foreground: oklch(0.95 0.01 25);
+    --border: oklch(0.28 0.02 240);
+    --input: oklch(0.22 0.02 240);
+    --ring: oklch(0.75 0.15 75);
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: "Inter", sans-serif;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: "Orbitron", "Inter", sans-serif;
+  }
+
+  .shadow-amber-glow {
+    box-shadow: 0 0 12px oklch(0.75 0.15 75 / 0.25);
+  }
+}
