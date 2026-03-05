@@ -62,7 +62,7 @@ export default function Header() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <img
-              src="/assets/generated/antenna-tower-logo.dim_256x256.png"
+              src="/assets/generated/antenna-tower-logo-transparent.dim_256x256.png"
               alt="US Repeater Network"
               className="w-8 h-8 object-contain"
             />

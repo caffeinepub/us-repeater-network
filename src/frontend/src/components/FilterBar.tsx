@@ -62,6 +62,7 @@ const US_STATES: { abbr: string; name: string }[] = [
   { abbr: "WV", name: "West Virginia" },
   { abbr: "WI", name: "Wisconsin" },
   { abbr: "WY", name: "Wyoming" },
+  { abbr: "UNK", name: "Unknown" },
 ];
 
 const MODES = [
@@ -138,7 +139,7 @@ export default function FilterBar({
             <SelectTrigger className="w-full">
               <SelectValue placeholder="All States" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="max-h-72 overflow-y-auto">
               <SelectItem value="all">All States</SelectItem>
               {US_STATES.map((s) => (
                 <SelectItem key={s.abbr} value={s.abbr}>

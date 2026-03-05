@@ -62,7 +62,7 @@ export default function HomePage() {
               <div className="relative">
                 <div className="absolute inset-0 bg-amber/20 rounded-full blur-3xl" />
                 <img
-                  src="/assets/generated/antenna-tower-logo.dim_256x256.png"
+                  src="/assets/generated/antenna-tower-logo-transparent.dim_256x256.png"
                   alt="Antenna Tower"
                   className="relative w-48 h-48 sm:w-64 sm:h-64 object-contain drop-shadow-2xl"
                 />
