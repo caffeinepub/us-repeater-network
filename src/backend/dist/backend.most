@@ -1,0 +1,168 @@
+// Version: 3.0.0
+type Data__159895909<T> = {var count : Nat__490723111; elements : [var ?T]};
+type Data__791452850<K, V> =
+  {var count : Nat__490723111; kvs : [var ?(K, V)]};
+type FavoriteId__555148574 = Principal;
+type Int__270357528 = Int__616954475;
+type Int__616954475 = Int;
+type Internal__667636161<T> =
+  {children : [var ?Node__92254746<T>]; data : Data__159895909<T>};
+type Internal__8484328<K, V> =
+  {children : [var ?Node__46230540<K, V>]; data : Data__791452850<K, V>};
+type Latitude__439353869 = Float;
+type Leaf__520550824<T> = {data : Data__159895909<T>};
+type Leaf__809889148<K, V> = {data : Data__791452850<K, V>};
+type Longitude__505964764 = Float;
+type Map__158565046<K, V> = Map__297112838<K, V>;
+type Map__297112838<K, V> =
+  {var root : Node__46230540<K, V>; var size : Nat__490723111};
+type Map__605269027<K, V> = Map__158565046<K, V>;
+type Nat__490723111 = Nat__920180692;
+type Nat__920180692 = Nat;
+type Node__46230540<K, V> =
+  {#internal : Internal__8484328<K, V>; #leaf : Leaf__809889148<K, V>};
+type Node__92254746<T> =
+  {#internal : Internal__667636161<T>; #leaf : Leaf__520550824<T>};
+type OldAccessControlState__841599830 =
+  {
+    var adminAssigned : Bool;
+    userRoles : Map__605269027<Principal, OldUserRole__889293160>
+  };
+type OldFavoriteId__788969048 = Principal;
+type OldRepeaterId__1063338955 = Nat;
+type OldRepeater__473581668 =
+  {
+    autopatchInfo : Text;
+    callSign : Text;
+    city : Text;
+    coverageDescription : Text;
+    ctcssTone : Text;
+    dcsCode : Text;
+    frequency : Float;
+    id : Nat;
+    linkInfo : Text;
+    offset : Float;
+    operationalNotes : Text;
+    sponsor : Text;
+    state : Text;
+    status : OldStatus__155413022;
+    submissionStatus : OldSubmissionStatus__841744901;
+    submittedBy : Text;
+    timestamp : Int;
+    toneMode : Text;
+    zipCode : Text
+  };
+type OldStatus__155413022 = {#active; #inactive};
+type OldSubmissionStatus__841744901 = {#approved; #pending; #rejected};
+type OldUserProfile__416069324 = {bio : Text; callSign : Text; name : Text};
+type OldUserRole__889293160 = {#admin; #guest; #user};
+type RepeaterId__642780312 = Nat;
+type Repeater__844652576 =
+  {
+    autopatchInfo : Text;
+    callSign : Text;
+    city : Text;
+    coverageDescription : Text;
+    ctcssTone : Text;
+    dcsCode : Text;
+    frequency : Float;
+    id : Nat;
+    linkInfo : Text;
+    offset : Float;
+    operationalNotes : Text;
+    sponsor : Text;
+    state : Text;
+    status : Status__1000080315;
+    submissionStatus : SubmissionStatus__62805680;
+    submittedBy : Text;
+    timestamp : Time__900049286;
+    toneMode : Text;
+    zipCode : Text
+  };
+type Set__532252804<T> = Set__710576254<T>;
+type Set__710576254<T> =
+  {var root : Node__92254746<T>; var size : Nat__490723111};
+type Status__1000080315 = {#active; #inactive};
+type SubmissionStatus__62805680 = {#approved; #pending; #rejected};
+type Time__796480547 = Int__270357528;
+type Time__900049286 = Time__796480547;
+type UserProfile__491224006 = {bio : Text; callSign : Text; name : Text};
+type ZipCode__562462527 = Text;
+type ZipCoordinate__316306276 =
+  {latitude : Latitude__439353869; longitude : Longitude__505964764};
+actor ({
+  in accessControlState : OldAccessControlState__841599830;
+  in var adminPrincipal : ?Principal;
+  in favorites :
+    Map__605269027<OldFavoriteId__788969048,
+                    Set__532252804<OldRepeaterId__1063338955>>;
+  stable hardcodedRepeater :
+    {
+      autopatchInfo : Text;
+      callSign : Text;
+      city : Text;
+      coverageDescription : Text;
+      ctcssTone : Text;
+      dcsCode : Text;
+      frequency : Float;
+      id : Nat;
+      linkInfo : Text;
+      offset : Float;
+      operationalNotes : Text;
+      sponsor : Text;
+      state : Text;
+      status : Status__1000080315;
+      submissionStatus : SubmissionStatus__62805680;
+      submittedBy : Text;
+      timestamp : Time__900049286;
+      toneMode : Text;
+      zipCode : Text
+    };
+  in var nextRepeaterId : Nat;
+  in repeaters : Map__605269027<Nat, OldRepeater__473581668>;
+  in userProfiles : Map__605269027<Principal, OldUserProfile__416069324>;
+  stable zipCoordinates : [(ZipCode__562462527, ZipCoordinate__316306276)]
+}, {
+  stable var adminPrincipal : ?Principal;
+  stable favorites :
+    {
+      var root :
+        Node__46230540<FavoriteId__555148574,
+                        Set__532252804<RepeaterId__642780312>>;
+      var size : Nat__490723111
+    };
+  stable hardcodedRepeater :
+    {
+      autopatchInfo : Text;
+      callSign : Text;
+      city : Text;
+      coverageDescription : Text;
+      ctcssTone : Text;
+      dcsCode : Text;
+      frequency : Float;
+      id : Nat;
+      linkInfo : Text;
+      offset : Float;
+      operationalNotes : Text;
+      sponsor : Text;
+      state : Text;
+      status : Status__1000080315;
+      submissionStatus : SubmissionStatus__62805680;
+      submittedBy : Text;
+      timestamp : Time__900049286;
+      toneMode : Text;
+      zipCode : Text
+    };
+  stable var nextRepeaterId : Nat;
+  stable repeaters :
+    {
+      var root : Node__46230540<Nat, Repeater__844652576>;
+      var size : Nat__490723111
+    };
+  stable userProfiles :
+    {
+      var root : Node__46230540<Principal, UserProfile__491224006>;
+      var size : Nat__490723111
+    };
+  stable zipCoordinates : [(ZipCode__562462527, ZipCoordinate__316306276)]
+}) ;

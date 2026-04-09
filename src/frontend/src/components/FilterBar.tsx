@@ -6,6 +6,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useGetRepeaterCountByState } from "@/hooks/useQueries";
 import { MapPin, Radio, Search } from "lucide-react";
 import type React from "react";
 
@@ -101,6 +102,20 @@ export default function FilterBar({
   showingCount,
   totalCount,
 }: FilterBarProps) {
+  const { data: stateCounts } = useGetRepeaterCountByState();
+
+  // Build a Map<abbr, count> for O(1) lookup
+  const countMap = new Map<string, number>(
+    (stateCounts ?? []).map(([abbr, count]) => [abbr, Number(count)]),
+  );
+
+  const stateLabel = (abbr: string, name: string): string => {
+    const count = countMap.get(abbr);
+    return count && count > 0
+      ? `${abbr} — ${name} (${count.toLocaleString()})`
+      : `${abbr} — ${name}`;
+  };
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onFiltersChange({ ...filters, search: e.target.value });
   };
@@ -143,7 +158,7 @@ export default function FilterBar({
               <SelectItem value="all">All States</SelectItem>
               {US_STATES.map((s) => (
                 <SelectItem key={s.abbr} value={s.abbr}>
-                  {s.abbr} — {s.name}
+                  {stateLabel(s.abbr, s.name)}
                 </SelectItem>
               ))}
             </SelectContent>

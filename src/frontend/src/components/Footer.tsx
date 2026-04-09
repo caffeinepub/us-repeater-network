@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Heart } from "lucide-react";
+import { Heart, Radio } from "lucide-react";
 import React from "react";
 
 export default function Footer() {
@@ -16,7 +16,7 @@ export default function Footer() {
           <div>
             <div className="flex items-center gap-2 mb-3">
               <img
-                src="/assets/generated/antenna-tower-logo.dim_256x256.png"
+                src="/assets/generated/antenna-tower-logo-transparent.dim_256x256.png"
                 alt="US Repeater Network"
                 className="w-8 h-8 object-contain"
               />
@@ -28,6 +28,16 @@ export default function Footer() {
               Your CHIRP radio memory manager and ham radio repeater directory,
               powered by the Internet Computer.
             </p>
+            {/* Creator credit */}
+            <div className="mt-4 flex items-center gap-2 bg-amber-400/10 border border-amber-400/30 rounded-lg px-3 py-2">
+              <Radio className="w-4 h-4 text-amber-400 flex-shrink-0" />
+              <div>
+                <p className="text-xs text-amber-400 font-semibold uppercase tracking-wider">
+                  Creator &amp; Designer
+                </p>
+                <p className="text-sm font-bold text-foreground">KO4RXE</p>
+              </div>
+            </div>
           </div>
 
           {/* Quick links */}
@@ -81,7 +91,13 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-navy-700 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
-          <span>© {year} US Repeater Network. All rights reserved.</span>
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <span>© {year} US Repeater Network. All rights reserved.</span>
+            <span className="hidden sm:inline text-muted-foreground/40">·</span>
+            <span className="text-amber-400/80 font-medium">
+              Created &amp; Designed by KO4RXE
+            </span>
+          </div>
           <a
             href={`https://caffeine.ai/?utm_source=Caffeine-footer&utm_medium=referral&utm_content=${appId}`}
             target="_blank"

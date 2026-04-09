@@ -1,16 +1,10 @@
 import { Principal } from "@dfinity/principal";
-import {
-  useInfiniteQuery,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   NewRepeater,
   Repeater,
   UpdateRepeaterData,
   UserProfile,
-  UserRole,
 } from "../backend";
 import { useActor } from "./useActor";
 
@@ -26,7 +20,9 @@ export function useGetApprovedRepeaters() {
       return actor.getApprovedRepeaters();
     },
     enabled: !!actor && !isFetching,
-    staleTime: 1000 * 60 * 2, // 2 minutes
+    staleTime: 1000 * 60 * 10, // 10 minutes — avoid re-fetching on every nav
+    gcTime: 1000 * 60 * 30, // keep in memory for 30 min
+    refetchOnWindowFocus: false,
   });
 }
 
@@ -210,35 +206,6 @@ export function useSaveCallerUserProfile() {
 
 // ─── Admin ────────────────────────────────────────────────────────────────────
 
-export function useIsCallerAdmin() {
-  const { actor, isFetching } = useActor();
-
-  return useQuery<boolean>({
-    queryKey: ["isCallerAdmin"],
-    queryFn: async () => {
-      if (!actor) return false;
-      return actor.isCallerAdmin();
-    },
-    enabled: !!actor && !isFetching,
-    retry: false,
-  });
-}
-
-export function useRegisterAdmin() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (passphrase: string) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.registerAdmin(passphrase);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["isCallerAdmin"] });
-    },
-  });
-}
-
 export function useIsAdminPassphraseValid() {
   const { actor } = useActor();
 
@@ -250,31 +217,21 @@ export function useIsAdminPassphraseValid() {
   });
 }
 
-export function useGetCallerUserRole() {
+// ─── Repeater counts by state ─────────────────────────────────────────────────
+
+export function useGetRepeaterCountByState() {
   const { actor, isFetching } = useActor();
 
-  return useQuery<UserRole>({
-    queryKey: ["callerUserRole"],
+  return useQuery<[string, bigint][]>({
+    queryKey: ["repeaterCountByState"],
     queryFn: async () => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.getCallerUserRole();
+      if (!actor) return [];
+      return actor.getRepeaterCountByState();
     },
     enabled: !!actor && !isFetching,
-  });
-}
-
-export function useAssignCallerUserRole() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ user, role }: { user: Principal; role: UserRole }) => {
-      if (!actor) throw new Error("Actor not available");
-      return actor.assignCallerUserRole(user, role);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["callerUserRole"] });
-    },
+    staleTime: 1000 * 60 * 10, // 10 minutes
+    gcTime: 1000 * 60 * 30,
+    refetchOnWindowFocus: false,
   });
 }
 

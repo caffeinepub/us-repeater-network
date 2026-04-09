@@ -7,21 +7,14 @@ import Float "mo:core/Float";
 import Array "mo:core/Array";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
-import Iter "mo:core/Iter";
 import Int "mo:core/Int";
 import Order "mo:core/Order";
+import Migration "migration";
 
-import MixinAuthorization "authorization/MixinAuthorization";
-import AccessControl "authorization/access-control";
-import OutCall "http-outcalls/outcall";
-
+(with migration = Migration.run)
 actor {
   // State to store the admin principal persistently
   var adminPrincipal : ?Principal = null;
-
-  // Initialize the access control system for role-based access
-  let accessControlState = AccessControl.initState();
-  include MixinAuthorization(accessControlState);
 
   type Latitude = Float;
   type Longitude = Float;
@@ -224,28 +217,28 @@ actor {
   };
 
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+    if (caller.isAnonymous()) {
       Runtime.trap("Unauthorized: Only authenticated users can view their profile");
     };
     userProfiles.get(caller);
   };
 
   public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
-    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
+    if (caller.isAnonymous()) {
       Runtime.trap("Unauthorized: Can only view your own profile");
     };
     userProfiles.get(user);
   };
 
   public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+    if (caller.isAnonymous()) {
       Runtime.trap("Unauthorized: Only authenticated users can save profiles");
     };
     userProfiles.add(caller, profile);
   };
 
   public shared ({ caller }) func addRepeater(data : NewRepeater) : async Repeater {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+    if (caller.isAnonymous()) {
       Runtime.trap("Unauthorized: Only authenticated users can add repeaters. Sorry! Double check if you are logged in to HamRepeaters.ai");
     };
     let repeater : Repeater = {
@@ -317,25 +310,8 @@ actor {
     };
 
     let updatedRepeater : Repeater = {
-      id = repeater.id;
-      frequency = repeater.frequency;
-      offset = repeater.offset;
-      callSign = repeater.callSign;
-      sponsor = repeater.sponsor;
-      city = repeater.city;
-      state = repeater.state;
-      zipCode = repeater.zipCode;
-      ctcssTone = repeater.ctcssTone;
-      dcsCode = repeater.dcsCode;
-      toneMode = repeater.toneMode;
-      coverageDescription = repeater.coverageDescription;
-      operationalNotes = repeater.operationalNotes;
-      autopatchInfo = repeater.autopatchInfo;
-      linkInfo = repeater.linkInfo;
-      status = repeater.status;
+      repeater with
       submissionStatus = if approve { #approved } else { #rejected };
-      submittedBy = repeater.submittedBy;
-      timestamp = repeater.timestamp;
     };
 
     repeaters.add(repeaterId, updatedRepeater);
@@ -367,7 +343,7 @@ actor {
     };
 
     let updatedRepeater : Repeater = {
-      id = existingRepeater.id;
+      existingRepeater with
       frequency = switch (data.frequency) {
         case (null) { existingRepeater.frequency };
         case (?value) { value };
@@ -428,9 +404,6 @@ actor {
         case (null) { existingRepeater.status };
         case (?value) { value };
       };
-      submissionStatus = existingRepeater.submissionStatus;
-      submittedBy = existingRepeater.submittedBy;
-      timestamp = existingRepeater.timestamp;
     };
 
     repeaters.add(repeaterId, updatedRepeater);
@@ -506,7 +479,7 @@ actor {
   };
 
   public shared ({ caller }) func addFavorite(repeaterId : Nat) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+    if (caller.isAnonymous()) {
       Runtime.trap("Unauthorized: Only authenticated users can add favorites");
     };
     switch (repeaters.get(repeaterId)) {
@@ -530,7 +503,7 @@ actor {
   };
 
   public shared ({ caller }) func removeFavorite(repeaterId : Nat) : async () {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+    if (caller.isAnonymous()) {
       Runtime.trap("Unauthorized: Only authenticated users can remove favorites");
     };
     switch (repeaters.get(repeaterId)) {
@@ -550,9 +523,8 @@ actor {
     };
   };
 
-  // getFavorites: caller must be the user themselves or an admin
   public query ({ caller }) func getFavorites(user : Principal) : async [Repeater] {
-    if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
+    if (caller.isAnonymous()) {
       Runtime.trap("Unauthorized: Can only view your own favorites");
     };
 
@@ -606,72 +578,20 @@ actor {
     );
   };
 
-  public query ({ caller }) func transform(input : OutCall.TransformationInput) : async OutCall.TransformationOutput {
-    OutCall.transform(input);
-  };
-
-  public shared ({ caller }) func fetchAllRepeaterBookRepeaters() : async Text {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can fetch repeaters from RepeaterBook");
+  // Returns (stateAbbreviation, count) tuples for all repeaters grouped by state
+  public query func getRepeaterCountByState() : async [(Text, Nat)] {
+    let countsMap = Map.empty<Text, Nat>();
+    for (repeater in repeaters.values()) {
+      let current = switch (countsMap.get(repeater.state)) {
+        case (null) { 0 };
+        case (?n) { n };
+      };
+      countsMap.add(repeater.state, current + 1);
     };
-    let url = "https://api.repeaterbook.com/v1/repeaters";
-    await OutCall.httpGetRequest(url, [], transform);
+    countsMap.entries().toArray();
   };
 
-  public shared ({ caller }) func fetchRepeatersByStateFromRepeaterBook(stateAbbreviation : Text) : async Text {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can fetch repeaters from RepeaterBook");
-    };
-    let url = "https://api.repeaterbook.com/v1/repeaters?state=" # stateAbbreviation;
-    await OutCall.httpGetRequest(url, [], transform);
-  };
-
-  public shared ({ caller }) func fetchRepeatersByCountyFromRepeaterBook(stateAbbreviation : Text, county : Text) : async Text {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can fetch repeaters from RepeaterBook");
-    };
-    let url = "https://api.repeaterbook.com/v1/repeaters?state=" # stateAbbreviation # "&county=" # replaceSpacesWithPercentTwenty(county);
-    await OutCall.httpGetRequest(url, [], transform);
-  };
-
-  public shared ({ caller }) func fetchRepeatersByCityFromRepeaterBook(stateAbbreviation : Text, city : Text) : async Text {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can fetch repeaters from RepeaterBook");
-    };
-    let url = "https://api.repeaterbook.com/v1/repeaters?state=" # stateAbbreviation # "&city=" # replaceSpacesWithPercentTwenty(city);
-    await OutCall.httpGetRequest(url, [], transform);
-  };
-
-  public shared ({ caller }) func fetchRepeatersByZipFromRepeaterBook(zipCode : Text) : async Text {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can fetch repeaters from RepeaterBook");
-    };
-    let url = "https://api.repeaterbook.com/v1/repeaters?zip=" # zipCode;
-    await OutCall.httpGetRequest(url, [], transform);
-  };
-
-  public shared ({ caller }) func fetchRepeatersWithinRadiusFromRepeaterBook(zipCode : Text, radius : Nat) : async Text {
-    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
-      Runtime.trap("Unauthorized: Only authenticated users can fetch repeaters from RepeaterBook");
-    };
-    let url = "https://api.repeaterbook.com/v1/repeaters?zip=" # zipCode # "&radius=" # radius.toText();
-    await OutCall.httpGetRequest(url, [], transform);
-  };
-
-  func replaceSpacesWithPercentTwenty(text : Text) : Text {
-    let textStr = text.toVarArray();
-    let resultStr = textStr.map(
-      func(c) {
-        if (c == ' ') { '%' } else { c };
-      }
-    );
-    let percentTwentyStr = "%20".toVarArray();
-
-    let tempStr = resultStr.concat(percentTwentyStr);
-    Text.fromVarArray(tempStr);
-  };
-
-  // New function: Bulk add repeaters with passphrase, no principal check
+  // Bulk add repeaters with passphrase, no principal check
   public shared ({ caller }) func bulkAddRepeatersWithPassphrase(passphrase : Text, newRepeaters : [Repeater]) : async () {
     if (passphrase != "WendellAdmin2024") {
       Runtime.trap("Invalid admin passphrase");
@@ -679,25 +599,8 @@ actor {
 
     for (repeater in newRepeaters.values()) {
       let sanitized : Repeater = {
-        id = repeater.id;
-        frequency = repeater.frequency;
-        offset = repeater.offset;
-        callSign = repeater.callSign;
-        sponsor = repeater.sponsor;
-        city = repeater.city;
-        state = repeater.state;
-        zipCode = repeater.zipCode;
-        ctcssTone = repeater.ctcssTone;
-        dcsCode = repeater.dcsCode;
-        toneMode = repeater.toneMode;
-        coverageDescription = repeater.coverageDescription;
-        operationalNotes = repeater.operationalNotes;
-        autopatchInfo = repeater.autopatchInfo;
-        linkInfo = repeater.linkInfo;
-        status = repeater.status;
+        repeater with
         submissionStatus = #approved;
-        submittedBy = repeater.submittedBy;
-        timestamp = repeater.timestamp;
       };
       repeaters.add(sanitized.id, sanitized);
       if (sanitized.id >= nextRepeaterId) {
@@ -706,7 +609,7 @@ actor {
     };
   };
 
-  // New function: Admin passphrase validation, no auth required
+  // Admin passphrase validation, no auth required
   public query func isAdminPassphraseValid(passphrase : Text) : async Bool {
     passphrase == "WendellAdmin2024";
   };

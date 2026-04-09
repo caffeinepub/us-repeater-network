@@ -29,11 +29,17 @@ export default function HomePage() {
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground font-display leading-tight mb-6">
                 US Repeater <span className="text-amber">Network</span>
               </h1>
-              <p className="text-lg text-muted-foreground max-w-xl mb-8">
+              <p className="text-lg text-muted-foreground max-w-xl mb-4">
                 The most comprehensive ham radio repeater directory in the
                 United States. Search live data from RepeaterBook.com and
                 community-submitted GMRS repeaters.
               </p>
+              {/* Creator badge */}
+              <div className="inline-flex items-center gap-2 bg-amber/10 border border-amber/30 rounded-full px-4 py-1.5 text-sm text-amber mb-8">
+                <Radio className="w-3.5 h-3.5" />
+                Created &amp; Designed by{" "}
+                <strong className="ml-1">KO4RXE</strong>
+              </div>
               <div className="flex flex-wrap gap-3 justify-center lg:justify-start">
                 <Button
                   asChild
@@ -121,6 +127,23 @@ export default function HomePage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Creator Section */}
+      <section className="bg-navy/50 border-y border-border py-12">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-amber/10 border border-amber/30 rounded-full mb-4">
+            <Radio className="w-8 h-8 text-amber" />
+          </div>
+          <h2 className="text-2xl font-bold text-foreground font-display mb-2">
+            Created &amp; Designed by <span className="text-amber">KO4RXE</span>
+          </h2>
+          <p className="text-muted-foreground max-w-xl mx-auto">
+            The US Repeater Network was built to serve the ham radio community
+            across the United States — making it easy to find, share, and manage
+            repeater information nationwide.
+          </p>
         </div>
       </section>
 

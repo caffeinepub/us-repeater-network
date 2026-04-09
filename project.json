@@ -1,0 +1,24 @@
+{
+  "overview": "US Repeater Network is a professional ham radio repeater directory for the United States, featuring persistent CSV and JSON import, state-based filtering with live repeater counts per state, and a full directory browser with infinite scroll for 100,000+ repeater datasets.",
+  "features": [
+    "State dropdown showing repeater count per state (e.g. 'Kentucky (247)')",
+    "CHIRP CSV and JSON file import with auto field mapping",
+    "Admin passphrase-protected import (WendellAdmin2024)",
+    "All 50 US states plus Unknown in a scrollable dropdown",
+    "Infinite scroll for large datasets (100,000+ repeaters)",
+    "10-minute data caching for fast navigation",
+    "Navy/amber color theme with custom antenna/ham radio logo",
+    "KO4RXE credited as Creator and Designer"
+  ],
+  "category": "tools-utilities",
+  "tags": [
+    "ham-radio",
+    "repeater",
+    "directory",
+    "amateur-radio",
+    "chirp",
+    "fcc",
+    "frequency"
+  ],
+  "last_updated": "2026-04-09T10:42:56.696Z"
+}

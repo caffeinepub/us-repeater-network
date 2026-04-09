@@ -1,0 +1,106 @@
+type UserProfile = 
+ record {
+   bio: text;
+   callSign: text;
+   name: text;
+ };
+type UpdateRepeaterData = 
+ record {
+   autopatchInfo: opt text;
+   callSign: opt text;
+   city: opt text;
+   coverageDescription: opt text;
+   ctcssTone: opt text;
+   dcsCode: opt text;
+   frequency: opt float64;
+   linkInfo: opt text;
+   offset: opt float64;
+   operationalNotes: opt text;
+   sponsor: opt text;
+   state: opt text;
+   status: opt Status;
+   toneMode: opt text;
+   zipCode: opt text;
+ };
+type Time = int;
+type SubmissionStatus = 
+ variant {
+   approved;
+   pending;
+   rejected;
+ };
+type Status = 
+ variant {
+   active;
+   inactive;
+ };
+type Repeater = 
+ record {
+   autopatchInfo: text;
+   callSign: text;
+   city: text;
+   coverageDescription: text;
+   ctcssTone: text;
+   dcsCode: text;
+   frequency: float64;
+   id: nat;
+   linkInfo: text;
+   offset: float64;
+   operationalNotes: text;
+   sponsor: text;
+   state: text;
+   status: Status;
+   submissionStatus: SubmissionStatus;
+   submittedBy: text;
+   timestamp: Time;
+   toneMode: text;
+   zipCode: text;
+ };
+type NewRepeater = 
+ record {
+   autopatchInfo: text;
+   callSign: text;
+   city: text;
+   coverageDescription: text;
+   ctcssTone: text;
+   dcsCode: text;
+   frequency: float64;
+   linkInfo: text;
+   offset: float64;
+   operationalNotes: text;
+   sponsor: text;
+   state: text;
+   status: Status;
+   submittedBy: text;
+   toneMode: text;
+   zipCode: text;
+ };
+type Miles = nat;
+service : {
+  addFavorite: (repeaterId: nat) -> ();
+  addRepeater: (data: NewRepeater) -> (Repeater);
+  approveRepeater: (repeaterId: nat, approve: bool) -> ();
+  bulkAddRepeaters: (newRepeaters: vec Repeater) -> ();
+  bulkAddRepeatersWithPassphrase: (passphrase: text, newRepeaters:
+   vec Repeater) -> ();
+  deleteRepeater: (repeaterId: nat) -> ();
+  getApprovedCitiesByState: (state: text) -> (vec text) query;
+  getApprovedRepeaters: () -> (vec Repeater) query;
+  getApprovedStates: () -> (vec text) query;
+  getCallerUserProfile: () -> (opt UserProfile) query;
+  getFavorites: (user: principal) -> (vec Repeater) query;
+  getPendingRepeaters: () -> (vec Repeater) query;
+  getRepeaterCountByState: () -> (vec record {
+                                        text;
+                                        nat;
+                                      }) query;
+  getRepeatersByCityAndState: (state: text, city: text) ->
+   (vec Repeater) query;
+  getUserProfile: (user: principal) -> (opt UserProfile) query;
+  isAdminPassphraseValid: (passphrase: text) -> (bool) query;
+  registerAdmin: (passphrase: text) -> ();
+  removeFavorite: (repeaterId: nat) -> ();
+  saveCallerUserProfile: (profile: UserProfile) -> ();
+  searchByZipCode: (zipCode: text, radius: Miles) -> (vec Repeater) query;
+  updateRepeater: (repeaterId: nat, data: UpdateRepeaterData) -> (Repeater);
+}

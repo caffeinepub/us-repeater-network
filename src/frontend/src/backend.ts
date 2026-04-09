@@ -89,11 +89,6 @@ export class ExternalBlob {
         return this;
     }
 }
-export interface http_request_result {
-    status: bigint;
-    body: Uint8Array;
-    headers: Array<http_header>;
-}
 export interface NewRepeater {
     status: Status;
     dcsCode: string;
@@ -112,17 +107,7 @@ export interface NewRepeater {
     linkInfo: string;
     ctcssTone: string;
 }
-export type Miles = bigint;
-export interface TransformationOutput {
-    status: bigint;
-    body: Uint8Array;
-    headers: Array<http_header>;
-}
 export type Time = bigint;
-export interface TransformationInput {
-    context: Uint8Array;
-    response: http_request_result;
-}
 export interface Repeater {
     id: bigint;
     status: Status;
@@ -166,10 +151,7 @@ export interface UserProfile {
     name: string;
     callSign: string;
 }
-export interface http_header {
-    value: string;
-    name: string;
-}
+export type Miles = bigint;
 export enum Status {
     active = "active",
     inactive = "inactive"
@@ -179,61 +161,32 @@ export enum SubmissionStatus {
     approved = "approved",
     rejected = "rejected"
 }
-export enum UserRole {
-    admin = "admin",
-    user = "user",
-    guest = "guest"
-}
 export interface backendInterface {
-    _initializeAccessControlWithSecret(userSecret: string): Promise<void>;
     addFavorite(repeaterId: bigint): Promise<void>;
     addRepeater(data: NewRepeater): Promise<Repeater>;
     approveRepeater(repeaterId: bigint, approve: boolean): Promise<void>;
-    assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
     bulkAddRepeaters(newRepeaters: Array<Repeater>): Promise<void>;
     bulkAddRepeatersWithPassphrase(passphrase: string, newRepeaters: Array<Repeater>): Promise<void>;
     deleteRepeater(repeaterId: bigint): Promise<void>;
-    fetchAllRepeaterBookRepeaters(): Promise<string>;
-    fetchRepeatersByCityFromRepeaterBook(stateAbbreviation: string, city: string): Promise<string>;
-    fetchRepeatersByCountyFromRepeaterBook(stateAbbreviation: string, county: string): Promise<string>;
-    fetchRepeatersByStateFromRepeaterBook(stateAbbreviation: string): Promise<string>;
-    fetchRepeatersByZipFromRepeaterBook(zipCode: string): Promise<string>;
-    fetchRepeatersWithinRadiusFromRepeaterBook(zipCode: string, radius: bigint): Promise<string>;
     getApprovedCitiesByState(state: string): Promise<Array<string>>;
     getApprovedRepeaters(): Promise<Array<Repeater>>;
     getApprovedStates(): Promise<Array<string>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
-    getCallerUserRole(): Promise<UserRole>;
     getFavorites(user: Principal): Promise<Array<Repeater>>;
     getPendingRepeaters(): Promise<Array<Repeater>>;
+    getRepeaterCountByState(): Promise<Array<[string, bigint]>>;
     getRepeatersByCityAndState(state: string, city: string): Promise<Array<Repeater>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isAdminPassphraseValid(passphrase: string): Promise<boolean>;
-    isCallerAdmin(): Promise<boolean>;
     registerAdmin(passphrase: string): Promise<void>;
     removeFavorite(repeaterId: bigint): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     searchByZipCode(zipCode: string, radius: Miles): Promise<Array<Repeater>>;
-    transform(input: TransformationInput): Promise<TransformationOutput>;
     updateRepeater(repeaterId: bigint, data: UpdateRepeaterData): Promise<Repeater>;
 }
-import type { NewRepeater as _NewRepeater, Repeater as _Repeater, Status as _Status, SubmissionStatus as _SubmissionStatus, Time as _Time, UpdateRepeaterData as _UpdateRepeaterData, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
+import type { NewRepeater as _NewRepeater, Repeater as _Repeater, Status as _Status, SubmissionStatus as _SubmissionStatus, Time as _Time, UpdateRepeaterData as _UpdateRepeaterData, UserProfile as _UserProfile } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
-    async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor._initializeAccessControlWithSecret(arg0);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor._initializeAccessControlWithSecret(arg0);
-            return result;
-        }
-    }
     async addFavorite(arg0: bigint): Promise<void> {
         if (this.processError) {
             try {
@@ -276,45 +229,31 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async assignCallerUserRole(arg0: Principal, arg1: UserRole): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n11(this._uploadFile, this._downloadFile, arg1));
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n11(this._uploadFile, this._downloadFile, arg1));
-            return result;
-        }
-    }
     async bulkAddRepeaters(arg0: Array<Repeater>): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.bulkAddRepeaters(to_candid_vec_n13(this._uploadFile, this._downloadFile, arg0));
+                const result = await this.actor.bulkAddRepeaters(to_candid_vec_n11(this._uploadFile, this._downloadFile, arg0));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.bulkAddRepeaters(to_candid_vec_n13(this._uploadFile, this._downloadFile, arg0));
+            const result = await this.actor.bulkAddRepeaters(to_candid_vec_n11(this._uploadFile, this._downloadFile, arg0));
             return result;
         }
     }
     async bulkAddRepeatersWithPassphrase(arg0: string, arg1: Array<Repeater>): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.bulkAddRepeatersWithPassphrase(arg0, to_candid_vec_n13(this._uploadFile, this._downloadFile, arg1));
+                const result = await this.actor.bulkAddRepeatersWithPassphrase(arg0, to_candid_vec_n11(this._uploadFile, this._downloadFile, arg1));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.bulkAddRepeatersWithPassphrase(arg0, to_candid_vec_n13(this._uploadFile, this._downloadFile, arg1));
+            const result = await this.actor.bulkAddRepeatersWithPassphrase(arg0, to_candid_vec_n11(this._uploadFile, this._downloadFile, arg1));
             return result;
         }
     }
@@ -329,90 +268,6 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.deleteRepeater(arg0);
-            return result;
-        }
-    }
-    async fetchAllRepeaterBookRepeaters(): Promise<string> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.fetchAllRepeaterBookRepeaters();
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.fetchAllRepeaterBookRepeaters();
-            return result;
-        }
-    }
-    async fetchRepeatersByCityFromRepeaterBook(arg0: string, arg1: string): Promise<string> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.fetchRepeatersByCityFromRepeaterBook(arg0, arg1);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.fetchRepeatersByCityFromRepeaterBook(arg0, arg1);
-            return result;
-        }
-    }
-    async fetchRepeatersByCountyFromRepeaterBook(arg0: string, arg1: string): Promise<string> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.fetchRepeatersByCountyFromRepeaterBook(arg0, arg1);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.fetchRepeatersByCountyFromRepeaterBook(arg0, arg1);
-            return result;
-        }
-    }
-    async fetchRepeatersByStateFromRepeaterBook(arg0: string): Promise<string> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.fetchRepeatersByStateFromRepeaterBook(arg0);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.fetchRepeatersByStateFromRepeaterBook(arg0);
-            return result;
-        }
-    }
-    async fetchRepeatersByZipFromRepeaterBook(arg0: string): Promise<string> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.fetchRepeatersByZipFromRepeaterBook(arg0);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.fetchRepeatersByZipFromRepeaterBook(arg0);
-            return result;
-        }
-    }
-    async fetchRepeatersWithinRadiusFromRepeaterBook(arg0: string, arg1: bigint): Promise<string> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.fetchRepeatersWithinRadiusFromRepeaterBook(arg0, arg1);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.fetchRepeatersWithinRadiusFromRepeaterBook(arg0, arg1);
             return result;
         }
     }
@@ -434,14 +289,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getApprovedRepeaters();
-                return from_candid_vec_n18(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n16(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getApprovedRepeaters();
-            return from_candid_vec_n18(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n16(this._uploadFile, this._downloadFile, result);
         }
     }
     async getApprovedStates(): Promise<Array<string>> {
@@ -462,84 +317,84 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getCallerUserProfile();
-                return from_candid_opt_n19(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n17(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getCallerUserProfile();
-            return from_candid_opt_n19(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async getCallerUserRole(): Promise<UserRole> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.getCallerUserRole();
-                return from_candid_UserRole_n20(this._uploadFile, this._downloadFile, result);
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.getCallerUserRole();
-            return from_candid_UserRole_n20(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n17(this._uploadFile, this._downloadFile, result);
         }
     }
     async getFavorites(arg0: Principal): Promise<Array<Repeater>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getFavorites(arg0);
-                return from_candid_vec_n18(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n16(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getFavorites(arg0);
-            return from_candid_vec_n18(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n16(this._uploadFile, this._downloadFile, result);
         }
     }
     async getPendingRepeaters(): Promise<Array<Repeater>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getPendingRepeaters();
-                return from_candid_vec_n18(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n16(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getPendingRepeaters();
-            return from_candid_vec_n18(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n16(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getRepeaterCountByState(): Promise<Array<[string, bigint]>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getRepeaterCountByState();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getRepeaterCountByState();
+            return result;
         }
     }
     async getRepeatersByCityAndState(arg0: string, arg1: string): Promise<Array<Repeater>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getRepeatersByCityAndState(arg0, arg1);
-                return from_candid_vec_n18(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n16(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getRepeatersByCityAndState(arg0, arg1);
-            return from_candid_vec_n18(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n16(this._uploadFile, this._downloadFile, result);
         }
     }
     async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getUserProfile(arg0);
-                return from_candid_opt_n19(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n17(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getUserProfile(arg0);
-            return from_candid_opt_n19(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n17(this._uploadFile, this._downloadFile, result);
         }
     }
     async isAdminPassphraseValid(arg0: string): Promise<boolean> {
@@ -553,20 +408,6 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.isAdminPassphraseValid(arg0);
-            return result;
-        }
-    }
-    async isCallerAdmin(): Promise<boolean> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.isCallerAdmin();
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.isCallerAdmin();
             return result;
         }
     }
@@ -616,41 +457,27 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.searchByZipCode(arg0, arg1);
-                return from_candid_vec_n18(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n16(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.searchByZipCode(arg0, arg1);
-            return from_candid_vec_n18(this._uploadFile, this._downloadFile, result);
-        }
-    }
-    async transform(arg0: TransformationInput): Promise<TransformationOutput> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.transform(arg0);
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.transform(arg0);
-            return result;
+            return from_candid_vec_n16(this._uploadFile, this._downloadFile, result);
         }
     }
     async updateRepeater(arg0: bigint, arg1: UpdateRepeaterData): Promise<Repeater> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateRepeater(arg0, to_candid_UpdateRepeaterData_n22(this._uploadFile, this._downloadFile, arg1));
+                const result = await this.actor.updateRepeater(arg0, to_candid_UpdateRepeaterData_n18(this._uploadFile, this._downloadFile, arg1));
                 return from_candid_Repeater_n5(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateRepeater(arg0, to_candid_UpdateRepeaterData_n22(this._uploadFile, this._downloadFile, arg1));
+            const result = await this.actor.updateRepeater(arg0, to_candid_UpdateRepeaterData_n18(this._uploadFile, this._downloadFile, arg1));
             return from_candid_Repeater_n5(this._uploadFile, this._downloadFile, result);
         }
     }
@@ -664,10 +491,7 @@ function from_candid_Status_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint
 function from_candid_SubmissionStatus_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _SubmissionStatus): SubmissionStatus {
     return from_candid_variant_n10(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserRole_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
-    return from_candid_variant_n21(_uploadFile, _downloadFile, value);
-}
-function from_candid_opt_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
+function from_candid_opt_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
     return value.length === 0 ? null : value[0];
 }
 function from_candid_record_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
@@ -742,15 +566,6 @@ function from_candid_variant_n10(_uploadFile: (file: ExternalBlob) => Promise<Ui
 }): SubmissionStatus {
     return "pending" in value ? SubmissionStatus.pending : "approved" in value ? SubmissionStatus.approved : "rejected" in value ? SubmissionStatus.rejected : value;
 }
-function from_candid_variant_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    admin: null;
-} | {
-    user: null;
-} | {
-    guest: null;
-}): UserRole {
-    return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
-}
 function from_candid_variant_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     active: null;
 } | {
@@ -758,28 +573,25 @@ function from_candid_variant_n8(_uploadFile: (file: ExternalBlob) => Promise<Uin
 }): Status {
     return "active" in value ? Status.active : "inactive" in value ? Status.inactive : value;
 }
-function from_candid_vec_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Repeater>): Array<Repeater> {
+function from_candid_vec_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Repeater>): Array<Repeater> {
     return value.map((x)=>from_candid_Repeater_n5(_uploadFile, _downloadFile, x));
 }
 function to_candid_NewRepeater_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: NewRepeater): _NewRepeater {
     return to_candid_record_n2(_uploadFile, _downloadFile, value);
 }
-function to_candid_Repeater_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Repeater): _Repeater {
-    return to_candid_record_n15(_uploadFile, _downloadFile, value);
+function to_candid_Repeater_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Repeater): _Repeater {
+    return to_candid_record_n13(_uploadFile, _downloadFile, value);
 }
 function to_candid_Status_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Status): _Status {
     return to_candid_variant_n4(_uploadFile, _downloadFile, value);
 }
-function to_candid_SubmissionStatus_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: SubmissionStatus): _SubmissionStatus {
-    return to_candid_variant_n17(_uploadFile, _downloadFile, value);
+function to_candid_SubmissionStatus_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: SubmissionStatus): _SubmissionStatus {
+    return to_candid_variant_n15(_uploadFile, _downloadFile, value);
 }
-function to_candid_UpdateRepeaterData_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UpdateRepeaterData): _UpdateRepeaterData {
-    return to_candid_record_n23(_uploadFile, _downloadFile, value);
+function to_candid_UpdateRepeaterData_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UpdateRepeaterData): _UpdateRepeaterData {
+    return to_candid_record_n19(_uploadFile, _downloadFile, value);
 }
-function to_candid_UserRole_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
-    return to_candid_variant_n12(_uploadFile, _downloadFile, value);
-}
-function to_candid_record_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function to_candid_record_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: bigint;
     status: Status;
     dcsCode: string;
@@ -829,7 +641,7 @@ function to_candid_record_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8
         toneMode: value.toneMode,
         submittedBy: value.submittedBy,
         offset: value.offset,
-        submissionStatus: to_candid_SubmissionStatus_n16(_uploadFile, _downloadFile, value.submissionStatus),
+        submissionStatus: to_candid_SubmissionStatus_n14(_uploadFile, _downloadFile, value.submissionStatus),
         callSign: value.callSign,
         zipCode: value.zipCode,
         state: value.state,
@@ -840,6 +652,57 @@ function to_candid_record_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8
         operationalNotes: value.operationalNotes,
         linkInfo: value.linkInfo,
         ctcssTone: value.ctcssTone
+    };
+}
+function to_candid_record_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    status?: Status;
+    dcsCode?: string;
+    coverageDescription?: string;
+    city?: string;
+    toneMode?: string;
+    offset?: number;
+    callSign?: string;
+    zipCode?: string;
+    state?: string;
+    sponsor?: string;
+    autopatchInfo?: string;
+    frequency?: number;
+    operationalNotes?: string;
+    linkInfo?: string;
+    ctcssTone?: string;
+}): {
+    status: [] | [_Status];
+    dcsCode: [] | [string];
+    coverageDescription: [] | [string];
+    city: [] | [string];
+    toneMode: [] | [string];
+    offset: [] | [number];
+    callSign: [] | [string];
+    zipCode: [] | [string];
+    state: [] | [string];
+    sponsor: [] | [string];
+    autopatchInfo: [] | [string];
+    frequency: [] | [number];
+    operationalNotes: [] | [string];
+    linkInfo: [] | [string];
+    ctcssTone: [] | [string];
+} {
+    return {
+        status: value.status ? candid_some(to_candid_Status_n3(_uploadFile, _downloadFile, value.status)) : candid_none(),
+        dcsCode: value.dcsCode ? candid_some(value.dcsCode) : candid_none(),
+        coverageDescription: value.coverageDescription ? candid_some(value.coverageDescription) : candid_none(),
+        city: value.city ? candid_some(value.city) : candid_none(),
+        toneMode: value.toneMode ? candid_some(value.toneMode) : candid_none(),
+        offset: value.offset ? candid_some(value.offset) : candid_none(),
+        callSign: value.callSign ? candid_some(value.callSign) : candid_none(),
+        zipCode: value.zipCode ? candid_some(value.zipCode) : candid_none(),
+        state: value.state ? candid_some(value.state) : candid_none(),
+        sponsor: value.sponsor ? candid_some(value.sponsor) : candid_none(),
+        autopatchInfo: value.autopatchInfo ? candid_some(value.autopatchInfo) : candid_none(),
+        frequency: value.frequency ? candid_some(value.frequency) : candid_none(),
+        operationalNotes: value.operationalNotes ? candid_some(value.operationalNotes) : candid_none(),
+        linkInfo: value.linkInfo ? candid_some(value.linkInfo) : candid_none(),
+        ctcssTone: value.ctcssTone ? candid_some(value.ctcssTone) : candid_none()
     };
 }
 function to_candid_record_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
@@ -896,73 +759,7 @@ function to_candid_record_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
         ctcssTone: value.ctcssTone
     };
 }
-function to_candid_record_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    status?: Status;
-    dcsCode?: string;
-    coverageDescription?: string;
-    city?: string;
-    toneMode?: string;
-    offset?: number;
-    callSign?: string;
-    zipCode?: string;
-    state?: string;
-    sponsor?: string;
-    autopatchInfo?: string;
-    frequency?: number;
-    operationalNotes?: string;
-    linkInfo?: string;
-    ctcssTone?: string;
-}): {
-    status: [] | [_Status];
-    dcsCode: [] | [string];
-    coverageDescription: [] | [string];
-    city: [] | [string];
-    toneMode: [] | [string];
-    offset: [] | [number];
-    callSign: [] | [string];
-    zipCode: [] | [string];
-    state: [] | [string];
-    sponsor: [] | [string];
-    autopatchInfo: [] | [string];
-    frequency: [] | [number];
-    operationalNotes: [] | [string];
-    linkInfo: [] | [string];
-    ctcssTone: [] | [string];
-} {
-    return {
-        status: value.status ? candid_some(to_candid_Status_n3(_uploadFile, _downloadFile, value.status)) : candid_none(),
-        dcsCode: value.dcsCode ? candid_some(value.dcsCode) : candid_none(),
-        coverageDescription: value.coverageDescription ? candid_some(value.coverageDescription) : candid_none(),
-        city: value.city ? candid_some(value.city) : candid_none(),
-        toneMode: value.toneMode ? candid_some(value.toneMode) : candid_none(),
-        offset: value.offset ? candid_some(value.offset) : candid_none(),
-        callSign: value.callSign ? candid_some(value.callSign) : candid_none(),
-        zipCode: value.zipCode ? candid_some(value.zipCode) : candid_none(),
-        state: value.state ? candid_some(value.state) : candid_none(),
-        sponsor: value.sponsor ? candid_some(value.sponsor) : candid_none(),
-        autopatchInfo: value.autopatchInfo ? candid_some(value.autopatchInfo) : candid_none(),
-        frequency: value.frequency ? candid_some(value.frequency) : candid_none(),
-        operationalNotes: value.operationalNotes ? candid_some(value.operationalNotes) : candid_none(),
-        linkInfo: value.linkInfo ? candid_some(value.linkInfo) : candid_none(),
-        ctcssTone: value.ctcssTone ? candid_some(value.ctcssTone) : candid_none()
-    };
-}
-function to_candid_variant_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): {
-    admin: null;
-} | {
-    user: null;
-} | {
-    guest: null;
-} {
-    return value == UserRole.admin ? {
-        admin: null
-    } : value == UserRole.user ? {
-        user: null
-    } : value == UserRole.guest ? {
-        guest: null
-    } : value;
-}
-function to_candid_variant_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: SubmissionStatus): {
+function to_candid_variant_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: SubmissionStatus): {
     pending: null;
 } | {
     approved: null;
@@ -988,8 +785,8 @@ function to_candid_variant_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8
         inactive: null
     } : value;
 }
-function to_candid_vec_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<Repeater>): Array<_Repeater> {
-    return value.map((x)=>to_candid_Repeater_n14(_uploadFile, _downloadFile, x));
+function to_candid_vec_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<Repeater>): Array<_Repeater> {
+    return value.map((x)=>to_candid_Repeater_n12(_uploadFile, _downloadFile, x));
 }
 export interface CreateActorOptions {
     agent?: Agent;

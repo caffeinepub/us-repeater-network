@@ -1,4 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { Radio } from "lucide-react";
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import type { Repeater } from "../backend";
 import FilterBar from "../components/FilterBar";
@@ -120,10 +121,22 @@ export default function DirectoryPage() {
         />
 
         {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-            {["s1", "s2", "s3", "s4", "s5", "s6"].map((k) => (
-              <Skeleton key={k} className="h-48 rounded-lg" />
-            ))}
+          <div className="mt-6 space-y-4">
+            {/* Loading message */}
+            <div className="flex items-center justify-center gap-3 py-6 text-muted-foreground">
+              <Radio className="w-5 h-5 animate-pulse text-primary" />
+              <span className="text-sm">
+                Loading repeater directory — large databases may take a
+                moment...
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9"].map(
+                (k) => (
+                  <Skeleton key={k} className="h-36 rounded-lg" />
+                ),
+              )}
+            </div>
           </div>
         ) : displayedRepeaters.length === 0 ? (
           <div className="text-center py-16">

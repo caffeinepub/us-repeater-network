@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   AlertCircle,
   CheckCircle,
+  FileJson,
   FileText,
   Loader2,
   Upload,
@@ -15,6 +16,9 @@ import { type Repeater, Status, SubmissionStatus } from "../backend";
 import AdminPassphraseGate from "../components/AdminPassphraseGate";
 import { useActor } from "../hooks/useActor";
 import { parseChirpCsv } from "../utils/csvParser";
+import { parseJsonRepeaters } from "../utils/jsonParser";
+
+type ImportType = "csv" | "json";
 
 interface ImportSummary {
   total: number;
@@ -39,6 +43,7 @@ export default function AdminPage() {
 function AdminImportContent() {
   const { actor } = useActor();
   const queryClient = useQueryClient();
+  const [importType, setImportType] = useState<ImportType>("csv");
   const [isDragging, setIsDragging] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -47,6 +52,22 @@ function AdminImportContent() {
   const [summary, setSummary] = useState<ImportSummary | null>(null);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const acceptedExt = importType === "csv" ? ".csv" : ".json";
+  const acceptedMime =
+    importType === "csv"
+      ? "text/csv,application/csv"
+      : "application/json,text/json";
+
+  const handleSwitchType = (type: ImportType) => {
+    setImportType(type);
+    setFile(null);
+    setSummary(null);
+    setError(null);
+    setProgress(0);
+    setProgressLabel("");
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -57,18 +78,22 @@ function AdminImportContent() {
     setIsDragging(false);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const dropped = e.dataTransfer.files[0];
-    if (dropped?.name.endsWith(".csv")) {
-      setFile(dropped);
-      setSummary(null);
-      setError(null);
-    } else {
-      setError("Please drop a valid .csv file.");
-    }
-  }, []);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+      const dropped = e.dataTransfer.files[0];
+      const ext = importType === "csv" ? ".csv" : ".json";
+      if (dropped?.name.endsWith(ext)) {
+        setFile(dropped);
+        setSummary(null);
+        setError(null);
+      } else {
+        setError(`Please drop a valid ${ext} file.`);
+      }
+    },
+    [importType],
+  );
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
@@ -85,14 +110,19 @@ function AdminImportContent() {
     setError(null);
     setSummary(null);
     setProgress(0);
-    setProgressLabel("Parsing CSV...");
+    const typeLabel = importType === "csv" ? "CSV" : "JSON";
+    setProgressLabel(`Parsing ${typeLabel}...`);
 
     try {
       const text = await file.text();
-      const { repeaters: parsed, errors: parseErrors } = parseChirpCsv(text);
+
+      const { repeaters: parsed, errors: parseErrors } =
+        importType === "csv" ? parseChirpCsv(text) : parseJsonRepeaters(text);
 
       if (parsed.length === 0) {
-        setError("No valid repeaters found in the CSV file.");
+        setError(
+          `No valid repeaters found in the ${typeLabel} file.${parseErrors.length > 0 ? ` ${parseErrors[0]}` : ""}`,
+        );
         setIsImporting(false);
         return;
       }
@@ -101,10 +131,7 @@ function AdminImportContent() {
         `Parsed ${parsed.length} repeaters. Preparing to save...`,
       );
 
-      // Convert parsed repeaters to backend Repeater type
-      // Use a large base ID offset to avoid collisions with existing IDs
-      // The backend will use these IDs directly and update nextRepeaterId
-      const baseId = Date.now(); // Use timestamp as base to ensure uniqueness
+      const baseId = Date.now();
       const repeatersToSave: Repeater[] = parsed.map((p, idx) => ({
         id: BigInt(baseId + idx),
         frequency: p.frequency,
@@ -123,8 +150,8 @@ function AdminImportContent() {
         linkInfo: p.linkInfo || "",
         status: Status.active,
         submissionStatus: SubmissionStatus.approved,
-        submittedBy: "CSV Import",
-        timestamp: BigInt(Date.now()) * BigInt(1_000_000), // nanoseconds
+        submittedBy: `${typeLabel} Import`,
+        timestamp: BigInt(Date.now()) * BigInt(1_000_000),
       }));
 
       const totalBatches = Math.ceil(repeatersToSave.length / BATCH_SIZE);
@@ -145,8 +172,6 @@ function AdminImportContent() {
         try {
           await actor.bulkAddRepeatersWithPassphrase(ADMIN_PASSPHRASE, batch);
           saved += batch.length;
-
-          // Tally by state
           for (const r of batch) {
             byState[r.state] = (byState[r.state] || 0) + 1;
           }
@@ -159,7 +184,6 @@ function AdminImportContent() {
       setProgress(100);
       setProgressLabel("Import complete!");
 
-      // Invalidate query caches so DirectoryPage refetches the new data
       await queryClient.invalidateQueries({ queryKey: ["approvedRepeaters"] });
       await queryClient.invalidateQueries({
         queryKey: ["approvedRepeatersInfinite"],
@@ -194,20 +218,80 @@ function AdminImportContent() {
       <div className="container mx-auto px-4 py-8 max-w-3xl">
         <div className="mb-8">
           <h1 className="text-3xl font-display font-bold text-foreground mb-2">
-            Import CHIRP CSV
+            Import Repeaters
           </h1>
           <p className="text-muted-foreground">
-            Bulk-import repeaters from a CHIRP radio memory manager CSV export.
-            All imported repeaters are immediately approved and visible in the
-            directory.
+            Bulk-import repeaters from a CHIRP CSV export or a JSON array of
+            repeater objects. All imported repeaters are immediately approved
+            and visible in the directory.
           </p>
         </div>
+
+        {/* Import type tabs */}
+        <div
+          className="flex gap-2 mb-6 bg-muted rounded-lg p-1 w-full sm:w-fit"
+          data-ocid="admin.import_type.tab"
+        >
+          <button
+            type="button"
+            data-ocid="admin.csv_tab"
+            onClick={() => handleSwitchType("csv")}
+            className={`flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              importType === "csv"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <FileText className="h-4 w-4" />
+            CHIRP CSV
+          </button>
+          <button
+            type="button"
+            data-ocid="admin.json_tab"
+            onClick={() => handleSwitchType("json")}
+            className={`flex flex-1 sm:flex-none items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+              importType === "json"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            <FileJson className="h-4 w-4" />
+            JSON
+          </button>
+        </div>
+
+        {/* JSON format hint */}
+        {importType === "json" && (
+          <div className="mb-4 bg-primary/5 border border-primary/20 rounded-lg p-4 text-sm text-muted-foreground">
+            <p className="font-medium text-foreground mb-1">
+              Expected JSON format
+            </p>
+            <p>
+              An array of repeater objects. Common field names are auto-mapped —
+              for example <code className="text-primary">freq</code>,{" "}
+              <code className="text-primary">frequency</code>, or{" "}
+              <code className="text-primary">rxfreq</code> all map to frequency.
+            </p>
+            <pre className="mt-2 text-xs bg-background rounded p-2 overflow-x-auto">{`[
+  {
+    "callsign": "W4ABC",
+    "frequency": 147.195,
+    "offset": 0.6,
+    "tone": 100.0,
+    "mode": "FM",
+    "city": "Louisville",
+    "state": "KY"
+  }
+]`}</pre>
+          </div>
+        )}
 
         {/* Drop zone */}
         {/* biome-ignore lint/a11y/useSemanticElements: div needed for drag-and-drop with nested button */}
         <div
           role="button"
           tabIndex={0}
+          data-ocid="admin.dropzone"
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
@@ -226,13 +310,18 @@ function AdminImportContent() {
           <input
             ref={fileInputRef}
             type="file"
-            accept=".csv"
+            accept={`${acceptedExt},${acceptedMime}`}
             className="hidden"
             onChange={handleFileSelect}
+            data-ocid="admin.upload_button"
           />
           {file ? (
             <div className="flex items-center justify-center gap-3">
-              <FileText className="h-8 w-8 text-primary" />
+              {importType === "csv" ? (
+                <FileText className="h-8 w-8 text-primary" />
+              ) : (
+                <FileJson className="h-8 w-8 text-primary" />
+              )}
               <div className="text-left">
                 <p className="font-medium text-foreground">{file.name}</p>
                 <p className="text-sm text-muted-foreground">
@@ -241,6 +330,7 @@ function AdminImportContent() {
               </div>
               <button
                 type="button"
+                data-ocid="admin.file_remove.button"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleReset();
@@ -254,10 +344,11 @@ function AdminImportContent() {
             <div>
               <Upload className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
               <p className="text-foreground font-medium mb-1">
-                Drop your CHIRP CSV here
+                Drop your {importType === "csv" ? "CHIRP CSV" : "JSON"} file
+                here
               </p>
               <p className="text-sm text-muted-foreground">
-                or click to browse files
+                or click to browse files ({acceptedExt})
               </p>
             </div>
           )}
@@ -267,6 +358,7 @@ function AdminImportContent() {
         {file && !summary && (
           <div className="mt-4 flex justify-end">
             <Button
+              data-ocid="admin.import.primary_button"
               onClick={handleImport}
               disabled={isImporting}
               className="min-w-[140px]"
@@ -285,7 +377,10 @@ function AdminImportContent() {
 
         {/* Progress */}
         {isImporting && (
-          <div className="mt-6 space-y-2">
+          <div
+            className="mt-6 space-y-2"
+            data-ocid="admin.import.loading_state"
+          >
             <Progress value={progress} className="h-2" />
             <p className="text-sm text-muted-foreground text-center">
               {progressLabel}
@@ -295,7 +390,10 @@ function AdminImportContent() {
 
         {/* Error */}
         {error && (
-          <div className="mt-6 flex items-start gap-3 bg-destructive/10 border border-destructive/30 rounded-lg p-4">
+          <div
+            data-ocid="admin.import.error_state"
+            className="mt-6 flex items-start gap-3 bg-destructive/10 border border-destructive/30 rounded-lg p-4"
+          >
             <AlertCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
             <p className="text-sm text-destructive">{error}</p>
           </div>
@@ -303,7 +401,10 @@ function AdminImportContent() {
 
         {/* Summary */}
         {summary && (
-          <div className="mt-6 bg-card border border-border rounded-xl p-6 space-y-4">
+          <div
+            data-ocid="admin.import.success_state"
+            className="mt-6 bg-card border border-border rounded-xl p-6 space-y-4"
+          >
             <div className="flex items-center gap-2 text-green-500">
               <CheckCircle className="h-5 w-5" />
               <h2 className="font-semibold text-lg">Import Complete</h2>
@@ -369,14 +470,19 @@ function AdminImportContent() {
             )}
 
             <p className="text-sm text-muted-foreground">
-              ✅ Imported repeaters are now visible in the{" "}
+              Imported repeaters are now visible in the{" "}
               <a href="/directory" className="text-primary underline">
                 repeater directory
               </a>
               .
             </p>
 
-            <Button variant="outline" onClick={handleReset} className="w-full">
+            <Button
+              variant="outline"
+              onClick={handleReset}
+              className="w-full"
+              data-ocid="admin.import_another.button"
+            >
               Import Another File
             </Button>
           </div>
